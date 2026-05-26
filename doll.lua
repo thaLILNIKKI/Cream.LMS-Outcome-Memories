@@ -243,3 +243,53 @@ if isTailsDoll() then
 	task.wait(1)
 	applyMdl(player.Character or player.CharacterAdded:Wait())
 end
+
+
+-- custom sounds..
+local function loadCustomAsset(fileName)
+    local cachePath = "cache/jubilevoicelines/" .. fileName
+    if isfile(cachePath) then return getcustomasset(cachePath) end
+    local success, result = pcall(
+        function()
+            return game:HttpGet(
+                "https://github.com/thaLILNIKKI/Cream.LMS-for-TailsDoll-Outcome-Memories/releases/download/"
+                .. "assets/" .. fileName
+            )
+        end
+    )
+    if success and result then
+        writefile(cachePath, result)
+        return getcustomasset(cachePath)
+    else
+        warn("failed to load " .. fileName)
+        return nil
+    end
+end
+
+local assigns = {
+    [80901931085615] = loadCustomAsset("NormalChase.mp3")
+    [129416111545242] = loadCustomAsset("TerrorRadius.mp3")
+    [112879248941055] = loadCustomAsset("LastLifeChase.mp3")
+    [131820864449998] = loadCustomAsset("Retract.mp3") -- giggle or smth here ~
+	[73636680793269] = "rbxassetid://129707701166974" -- NMI Swing XD
+	[108753423324802] = "rbxassetid://77110140707717" -- basic Swing
+	[134998846301914] = "rbxassetid://129707701166974" -- NMI Swing XD
+}
+
+game.DescendantAdded:Connect(function(desc)
+    if desc:IsA("Sound") then
+        task.wait(0.01) -- huh
+        -- print(desc:GetFullName() .. " - " .. tostring(desc.SoundId))
+        local soundId = desc.SoundId
+        local id = tonumber(soundId:match("rbxassetid://(%d+)"))
+        if id and assigns[id] then
+            local newAsset = assigns[id]
+            desc.SoundId = newAsset
+            desc:GetPropertyChangedSignal("SoundId"):Connect(function()
+                if desc.SoundId ~= newAsset then
+                    desc.SoundId = newAsset
+                end
+            end)
+        end
+    end
+end)
