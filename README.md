@@ -1,2 +1,2 @@
-# Cream.LMS-for-TailsDoll-Outcome_Memories
-Cream.LMS skin for TailsDoll script for Outcome Memories
+# Cream.LMS for TailsDoll
+puts cream model over tripwire. and makes eyes black yea.
