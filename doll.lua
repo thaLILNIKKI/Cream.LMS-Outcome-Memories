@@ -2,21 +2,6 @@ local Players				= game:GetService("Players")
 local RunService			= game:GetService("RunService")
 local ReplicatedStorage		= game:GetService("ReplicatedStorage")
 
-local BONE_MAP = {
-	["HumanoidRootPart"]	= "HumanoidRootPart",
-	["Waist"]				= "waist",
-	["MainBody"]			= "Body",
-	["Head"]				= "Head",
-	["RArm1"]				= "Right Sleeve",
-	["RArm2"]				= "Cylinder.013",
-	["LArm1"]				= "Left Sleeve",
-	["LArm2"]				= "Cylinder.023",
-	["RLeg1"]				= "Right Leg",
-	["RLeg2"]				= "Cylinder.001",
-	["LLeg1"]				= "Left Leg",
-	["LLeg2"]				= "Cylinder.034",
-}
-
 local _skinModelCache = nil
 local function getSkinModel()
 	if _skinModelCache and _skinModelCache.Parent then
@@ -67,11 +52,7 @@ local function customizeEyes(model)
 	if eye2 then setupEye(eye2, eye2.Size) end
 end
 
---========================================================
--- REMAP MOTORS - переименование костей под TailsDoll
---========================================================
-
-local function remapMotors(creamModel, tailsDollSource)
+local function remapMotors(creamModel)
 	local function find(name)
 		return creamModel:FindFirstChild(name, true)
 	end
@@ -82,7 +63,7 @@ local function remapMotors(creamModel, tailsDollSource)
 		end
 	end
 
-	-- Переименовываем части Cream в имена TailsDoll
+	-- Переименовываем части
 	rename(find("Body"), "MainBody")
 	rename(find("waist"), "Waist")
 	rename(find("Left Sleeve"), "LArm1")
@@ -90,7 +71,7 @@ local function remapMotors(creamModel, tailsDollSource)
 	rename(find("Left Leg"), "LLeg1")
 	rename(find("Right Leg"), "RLeg1")
 
-	-- Переименовываем Motor6D в иерархии
+	-- Переименовываем Motor6D
 	local hrp = find("HumanoidRootPart")
 	if hrp then
 		for _, motor in ipairs(hrp:GetChildren()) do
@@ -121,7 +102,7 @@ local function remapMotors(creamModel, tailsDollSource)
 		end
 	end
 
-	-- Переименовываем цепочки рук
+	-- Цепочки рук и ног
 	local lArm1 = find("LArm1")
 	if lArm1 then
 		for _, motor in ipairs(lArm1:GetChildren()) do
@@ -140,7 +121,6 @@ local function remapMotors(creamModel, tailsDollSource)
 		end
 	end
 
-	-- Переименовываем цепочки ног
 	local lLeg1 = find("LLeg1")
 	if lLeg1 then
 		for _, motor in ipairs(lLeg1:GetChildren()) do
@@ -247,7 +227,7 @@ local function applyToPlayer(playerName)
 	
 	makeRough(mdl)
 	customizeEyes(mdl)
-	remapMotors(mdl, source)
+	remapMotors(mdl)
 	
 	local muzzle = mdl:FindFirstChild("muzzle", true)
 	if muzzle then
@@ -256,7 +236,6 @@ local function applyToPlayer(playerName)
 		decal.Parent	= muzzle
 	end
 	
-	-- Синкируем только HumanoidRootPart, остальное по Motor6D
 	local syncConn
 	syncConn = RunService.Heartbeat:Connect(function()
 		if not playerModel.Parent then
@@ -270,7 +249,6 @@ local function applyToPlayer(playerName)
 				hiddenSet[part] = nil
 			end
 		end
-		-- Синкируем только корень - остальное через Motor6D
 		if newHrp and hrp and newHrp.Parent and hrp.Parent then
 			newHrp.CFrame = hrp.CFrame
 		end
@@ -319,8 +297,7 @@ local function onModelAdded(model)
 end
 
 local function onModelRemoved(model)
-	local name = model.Name
-	removeFromPlayer(name)
+	removeFromPlayer(model.Name)
 end
 
 local playersContainer = workspace:FindFirstChild("Players")
@@ -370,15 +347,15 @@ local assigns = {
     [112976135484851] = loadCustomAsset("Unleashed1.mp3"),
     [106071428647005]  = loadCustomAsset("Unleashed2.mp3"),
     [87302988643016]  = loadCustomAsset("Unleashed3.mp3"),
-    [131820864449998] = loadCustomAsset("Retract.mp3"), -- giggle or smth here ~
+    [131820864449998] = loadCustomAsset("Retract.mp3"),
 
-	[97101227703333] = "rbxassetid://139116822099909",  -- .Hit1]  2011x Hit2
-	[93465914238963] = "rbxassetid://88164444698409",  -- Lilith.Hit2] 
-	[113251186335660] = "rbxassetid://5507830073",  -- Lilith.Hit3] 
+	[97101227703333] = "rbxassetid://139116822099909",
+	[93465914238963] = "rbxassetid://88164444698409",
+	[113251186335660] = "rbxassetid://5507830073",
 	
-    [73636680793269] = "rbxassetid://77110140707717",  -- basic Swing
-    [108753423324802] = "rbxassetid://77110140707717",  -- basic Swing
-    [134998846301914] = "rbxassetid://77110140707717",  -- basic Swing
+    [73636680793269] = "rbxassetid://77110140707717",
+    [108753423324802] = "rbxassetid://77110140707717",
+    [134998846301914] = "rbxassetid://77110140707717",
 }
 
 game.DescendantAdded:Connect(function(desc)
