@@ -89,10 +89,7 @@ local function customizeEyes(model)
 	if eye2 then setupEye(eye2, eye2.Size) end
 end
 
-local function applyToPlayer(playerName)
-	local plrModel = workspace.Players:FindFirstChild(playerName)
-	if not plrModel then return end
-
+local function applyToPlayer(plrModel)
 	if plrModel:GetAttribute("Character") ~= "TailsDoll" then return end
 
 	local hrp = plrModel:FindFirstChild("HumanoidRootPart", true)
@@ -157,29 +154,17 @@ end
 local function onModelAdded(model)
 	if not model:IsA("Model") then return end
 	task.wait(1)
-    applyToPlayer(model.Name)
+    applyToPlayer(model)
 	model.AttributeChanged:Connect(function(attr)
 		if attr == "Character" then
 			task.wait(1)
-			applyToPlayer(model.Name) 
+			applyToPlayer(model) 
 		end
 	end)
 end
 
-local playersContainer = workspace:FindFirstChild("Players")
-if playersContainer then
-	for _, model in ipairs(playersContainer:GetChildren()) do
-		onModelAdded(model)
-	end
-	playersContainer.ChildAdded:Connect(onModelAdded)
-end
-
-Players.PlayerAdded:Connect(function(player)
-	player.CharacterAdded:Connect(function()
-		local playerModel = workspace.Players:FindFirstChild(player.Name)
-		onModelAdded(playerModel)
-	end)
-end)
+for _, model in ipairs(workspace.Players:GetChildren()) do onModelAdded(model) end
+workspace.Players.ChildAdded:Connect(onModelAdded)
 
 
 -- custom sounds..
