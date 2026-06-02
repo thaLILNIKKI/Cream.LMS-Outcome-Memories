@@ -52,8 +52,7 @@ local function setupEye(eye)
 	eye.Size = eye.Size / 1.3
 	
 	local decal = Instance.new("Decal")
-	decal.Texture = "rbxassetid://1845832244"
-	decal.TransparencyMode = Enum.DecalTransparencyMode.Multiply 
+	decal.Texture = "rbxassetid://7372299365"
 	decal.Parent = eye
 end
 local eye1 = find("eye1")
