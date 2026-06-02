@@ -49,7 +49,7 @@ end
 local function setupEye(eye)
     eye.Material = Enum.Material.Neon
 	eye.Color = Color3.fromRGB(255,0,0)
-	eye.Size = Vector3.new(0.8, 0.7, 0.8)
+	eye.Size = eye.Size / 1.3
 end
 local eye1 = find("eye1")
 local eye2 = find("eye2")
@@ -100,6 +100,14 @@ rename("Cylinder.035", "LLeg3")
 rename("Left Shoe", "LShoe")
 
 rename("tail", "RTail")
+
+-- blood on muzzle :3
+local muzzle = model:FindFirstChild("muzzle", true)
+if muzzle then
+	local decal		= Instance.new("Decal")
+	decal.Texture	= "rbxassetid://7321057974"
+	decal.Parent	= muzzle
+end
 
 -- ae
 for _, obj in ipairs(tar:GetChildren()) do
