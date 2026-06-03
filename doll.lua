@@ -260,7 +260,7 @@ end
 local assigns = {
     [80901931085615] = loadCustomAsset("NormalChaseFix.mp3"),
     [129416111545242] = loadCustomAsset("TerrorRadius.mp3"),
-    [112879248941055] = loadCustomAsset("LastLifeChase.mp3"),
+    [112879248941055] = loadCustomAsset("LastLifeChaseNew.mp3"),
 	
     [112976135484851] = loadCustomAsset("Unleashed1.mp3"),
     [106071428647005]  = loadCustomAsset("Unleashed2.mp3"),
@@ -308,7 +308,7 @@ _G.CreamOnTailsDollSkinCharacterFXConnection = game:GetService("ReplicatedStorag
                 sound.SoundId = HIT_SOUNDS[math.random(1, #HIT_SOUNDS)]
                 sound.Volume = 1
                 sound.RollOffMaxDistance = 115
-                sound.RollOffMinDistance = 40
+                sound.RollOffMinDistance = 20
                 sound.SoundGroup = game.ReplicatedStorage.ClientAssets.Sounds.sfx
                 sound.Parent = model
                 sound:Play()
