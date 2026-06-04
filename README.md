@@ -1,8 +1,8 @@
 # Cream.LMS
 puts cream model over tripwire. makes cream eyes black. replaces sounds.
-- TerrorRadius - https://www.youtube.com/watch?v=McPUkdesydM (pt1)
-- NormalChase - https://www.youtube.com/watch?v=McPUkdesydM (pt2)
-- ~~LastLifeChase - https://www.youtube.com/watch?v=C1alwtup_rI~~
+- Terror Radius - https://www.youtube.com/watch?v=McPUkdesydM (pt1)
+- Normal Chase - https://www.youtube.com/watch?v=McPUkdesydM (pt2)
+- Last Life Chase - https://www.youtube.com/watch?v=WJv3k06iybo
 
 > tested on [xeno](https://discord.gg/xe-no)
 
