@@ -20,7 +20,7 @@ src = src:FindFirstChild("Cream", true)
 src = src:FindFirstChild("Skins", true)
 src = src:FindFirstChild("Default", true)
 
-if not tar or not src then warn("models not found") return end
+if not tar or not src then warn("[Cream x TailsDoll] Models not found!") return end
 
 -- clone cream
 local model = src:Clone()
@@ -32,8 +32,7 @@ tar.Name = "_OLD"
 
 for _, v in ipairs(model:GetDescendants()) do
     if v:IsA("BasePart") then
-        -- make rough material
-        v.Material = (v.Material == Enum.Material.Fabric) and Enum.Material.Carpet or Enum.Material.Sandstone
+        v.Material = Enum.Material.Slate
     end
 end
 
@@ -42,21 +41,38 @@ local function find(name)
 end
 
 -- red dots :3
-local function setupEye(eye)
-    eye.Material = Enum.Material.Neon
-	eye.Color = Color3.fromRGB(255,0,0)
-	eye.Size = eye.Size / 1.3
+local thatslikeevilandscary = game:GetObjects("rbxassetid://120086931957772")[1]
+local eyeNames = {{"Eye1","eye1"}, {"Eye2","eye2"}}
+for _, pair in ipairs(eyeNames) do
+    local srcPart = thatslikeevilandscary:FindFirstChild(pair[1], true)
+    local dstPart = model:FindFirstChild(pair[2], true)
+    if srcPart and dstPart then
+        dstPart.Material = Enum.Material.Neon
+        dstPart.Color = Color3.fromRGB(0,0,0)
+        dstPart.Transparency = 1
+        dstPart.Size = dstPart.Size / 3
+        for _, child in ipairs(srcPart:GetChildren()) do
+            if child:IsA("ParticleEmitter") or child:IsA("Attachment") then
+                local existing = dstPart:FindFirstChild(child.Name)
+                child.Parent = dstPart
+                if child.Name == "YiSang" then child:Destroy() end
+                if child.Name == "bubble" then 
+                    child.LightEmission = 1
+                    child.LightInfluence = 1
+                end
+            end
+        end
+        srcPart.Part.ParticleEmitter.Parent = dstPart.Attachment
+        dstPart.Attachment.ParticleEmitter.LockedToPart = true
+    end
 end
-local eye1 = find("eye1")
-local eye2 = find("eye2")
-if eye1 then setupEye(eye1) end
-if eye2 then setupEye(eye2) end
+thatslikeevilandscary:Destroy()
 
 -- eyes
-local eyes = model:FindFirstChild("eyes", true)
+local eyes = find("eyes")
 if eyes and eyes:IsA("BasePart") then
-    eyes.Color      = Color3.new(0, 0, 0)
-    eyes.Material   = Enum.Material.SmoothPlastic
+    eyes.Material = Enum.Material.Neon
+    eyes.Color = Color3.new(0, 0, 0)
 end
 
 -- rename parts
@@ -68,42 +84,46 @@ local function rename(oldName, newName)
 		obj = find(oldName)
 	end 
 end
-rename("waist", "Waist")
-rename("Body", "MainBody")
 
-rename("eye1", "REye")
-rename("eye2", "LEye")
+    rename("waist", "Waist")
+    rename("Body", "MainBody")
 
-rename("Right Sleeve", "RArm1")
-rename("Cylinder.013", "RArm2")
-rename("Cylinder.014", "RArm3")
-rename("Cylinder.017", "RArm4")
-rename("Right Hand", "RHand")
+    rename("eye1", "REye")
+    rename("eye2", "LEye")
 
-rename("Left Sleeve", "LArm1")
-rename("Cylinder.023", "LArm2")
-rename("Cylinder.022", "LArm3")
-rename("Left Hand", "LHand")
+    rename("Right Sleeve", "RArm1")
+    rename("Cylinder.013", "RArm2")
+    rename("Cylinder.014", "RArm3")
+    rename("Cylinder.017", "RArm4")
+    rename("Right Hand", "RHand")
 
-rename("Right Leg", "RLeg1")
-rename("Cylinder.001", "RLeg2")
-rename("Cylinder", "RLeg3")
-rename("Right Shoe", "RShoe")
+    rename("Left Sleeve", "LArm1")
+    rename("Cylinder.023", "LArm2")
+    rename("Cylinder.022", "LArm3")
+    rename("Left Hand", "LHand")
 
-rename("Left Leg", "LLeg1")
-rename("Cylinder.034", "LLeg2")
-rename("Cylinder.035", "LLeg3")
-rename("Left Shoe", "LShoe")
+    rename("Right Leg", "RLeg1")
+    rename("Cylinder.001", "RLeg2")
+    rename("Cylinder", "RLeg3")
+    rename("Right Shoe", "RShoe")
 
-rename("tail", "RTail")
+    rename("Left Leg", "LLeg1")
+    rename("Cylinder.034", "LLeg2")
+    rename("Cylinder.035", "LLeg3")
+    rename("Left Shoe", "LShoe")
+
+    rename("tail", "RTail")
+--
 
 -- blood on muzzle :3
 local muzzle = model:FindFirstChild("muzzle", true)
-if muzzle then
-	local decal		= Instance.new("Decal")
-	decal.Texture	= "rbxassetid://7321057974"
-	decal.Parent	= muzzle
-end
+local drip = game:GetObjects("rbxassetid://84762690015926")[1]
+drip.Parent = muzzle
+drip.UVScale = Vector2.new(1.5, 1)
+
+-- dress..
+local dress = model:FindFirstChild("dress", true)
+dress.Material = Enum.Material.Sandstone
 
 --- FUCKING SERVER SIDED PLAYER BUILD HOLY HELL
 
