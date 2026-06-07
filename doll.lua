@@ -300,7 +300,7 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
             if path:find("Hurt") then desc.SoundId = StunSounds[math.random(1, #StunSounds)] end
             if path:find("Down") or path:find("Line") or path:find("Stun") or path:find("Hurt") then
                 -- mute others to avoid word stack
-                for _, child in ipairs(_G.TailsDollModel:GetChildren()) do
+                for _, child in ipairs(_G.TailsDollModel.Waist:GetChildren()) do
                     if not child:IsA("Sound") then continue end
                     if child.Name:find("CreamSpeech") then child:Stop() end
                 end
@@ -311,8 +311,8 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
                 sound.Volume = desc.Volume
                 sound.RollOffMaxDistance = desc.RollOffMaxDistance
                 sound.RollOffMinDistance = desc.RollOffMinDistance
-                sound.SoundGroup = game.ReplicatedStorage.ClientAssets.Sounds.sfx
-                sound.Parent = _G.TailsDollModel --desc.Parent
+                sound.SoundGroup = desc.SoundGroup
+                sound.Parent = _G.TailsDollModel.Waist
                 sound:Play()
                 task.wait(0.01)
                 game:GetService("Debris"):AddItem(sound, 10)
