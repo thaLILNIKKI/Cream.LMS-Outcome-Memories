@@ -274,12 +274,5 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
         local id = tonumber(desc.SoundId:match("rbxassetid://(%d+)"))
         if id and assigns[id] then desc.SoundId = assigns[id] end
 
-        if str:find("HumanoidRootPart.") then
-            if not desc.Parent then return end
-            if not desc.Parent.Parent then return end
-            if desc.Parent.Parent:GetAttribute("Character") ~= "TailsDoll" then return end
-            if str:find(".Down") then desc.SoundId = DownedSounds[math.random(1, #DownedSounds)] end
-            if str:find(".Stun") then desc.SoundId = StunSounds[math.random(1, #StunSounds)] end
-        end
     end
 end)
