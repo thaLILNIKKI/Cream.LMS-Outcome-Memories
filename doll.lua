@@ -53,7 +53,6 @@ for _, pair in ipairs(eyeNames) do
         dstPart.Size = dstPart.Size / 3
         for _, child in ipairs(srcPart:GetChildren()) do
             if child:IsA("ParticleEmitter") or child:IsA("Attachment") then
-                local existing = dstPart:FindFirstChild(child.Name)
                 child.Parent = dstPart
                 if child.Name == "YiSang" then child:Destroy() end
                 if child.Name == "bubble" then 
@@ -62,8 +61,6 @@ for _, pair in ipairs(eyeNames) do
                 end
             end
         end
-        srcPart.Part.ParticleEmitter.Parent = dstPart.Attachment
-        dstPart.Attachment.ParticleEmitter.LockedToPart = true
     end
 end
 thatslikeevilandscary:Destroy()
@@ -125,6 +122,8 @@ drip.UVScale = Vector2.new(1.5, 1)
 local dress = model:FindFirstChild("dress", true)
 dress.Material = Enum.Material.Sandstone
 
+print("[Cream x TailsDoll] Model setup done...")
+
 --- FUCKING SERVER SIDED PLAYER BUILD HOLY HELL
 
 local function replaceCharacter(playerName)
@@ -141,6 +140,8 @@ local function replaceCharacter(playerName)
             if string.find(v.Name, "Claw") then v:Destroy() end
             v.Transparency = 1
         end
+        if v:IsA("ParticleEmitter") then v:Destroy() end -- soul diamond
+        if v:IsA("PointLight") then v:Destroy() end -- soul diamond
     end
     
     local src = game:GetService("ReplicatedStorage")
@@ -217,7 +218,10 @@ _G.CreamOnTailsDollSkinGameStateConnection = workspace:WaitForChild("GamePropert
 	walkPlayers()
 end)
 
+print("[Cream x TailsDoll] Players scanned, game state being listened.")
+
 -- custom sounds..
+print("[Cream x TailsDoll] Loading custom sounds...")
 local function loadCustomAsset(fileName)
     local cachePath = "cache/cream-on-doll/" .. fileName
     if isfile(cachePath) then return getcustomasset(cachePath) end
@@ -262,6 +266,8 @@ for i = 1, 28 do table.insert(StunSounds, loadCustomAsset("Stun" .. i .. ".mp3")
 
 local DownedSounds = {}
 for i = 1, 14 do table.insert(DownedSounds, loadCustomAsset("Down" .. i .. ".mp3")) end
+
+print("[Cream x TailsDoll] Finished downloading custom sounds...")
 
 _G.CreamOnTailsDollSkinDescendantAddedConnection = _G.CreamOnTailsDollSkinDescendantAddedConnection or nil
 if _G.CreamOnTailsDollSkinDescendantAddedConnection then
@@ -311,3 +317,4 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
     end
 end)
 
+print("[Cream x TailsDoll] Ready!")
