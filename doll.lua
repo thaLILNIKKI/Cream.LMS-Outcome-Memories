@@ -274,6 +274,18 @@ for i = 1, 28 do table.insert(StunSounds, loadCustomAsset("Stun" .. i .. ".mp3")
 local DownedSounds = {}
 for i = 1, 14 do table.insert(DownedSounds, loadCustomAsset("Down" .. i .. ".mp3")) end
 
+local KillLines = {
+    ["Sonic"] = loadCustomAsset("Sonic.mp3"),
+    ["Tails"] = loadCustomAsset("Tails.mp3"),
+    ["MetalSonic"] = loadCustomAsset("MetalSonic.mp3"),
+    ["Amy"] = loadCustomAsset("Amy.mp3"),
+    ["Silver"] = loadCustomAsset("Silver.mp3"),
+    ["Blaze"] = loadCustomAsset("Blaze.mp3"),
+    ["Eggman"] = loadCustomAsset("Eggman.mp3"),
+    ["Cream"] = loadCustomAsset("Cream.mp3"),
+    ["Knuckles"] = loadCustomAsset("Knuckles.mp3")
+}
+
 print("[Cream x TailsDoll] Finished downloading custom sounds...")
 
 _G.CreamOnTailsDollSkinDescendantAddedConnection = _G.CreamOnTailsDollSkinDescendantAddedConnection or nil
@@ -291,9 +303,10 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
         if id and assigns[id] then desc.SoundId = assigns[id] end
 
 		local path = desc:GetFullName()
-        -- print(path)
+        print(path)
         if path:find("HumanoidRootPart.") then
             if not _G.TailsDollModel then return end
+            if path:find(".Blood Hit") then _G.PlayerHurtByTailsDollLately = desc.Parent.Parent end
             if path:find("Down") then desc.SoundId = DownedSounds[math.random(1, #DownedSounds)] end
             if path:find("Line") then desc.SoundId = DownedSounds[math.random(1, #DownedSounds)] end
             if path:find("Stun") then desc.SoundId = StunSounds[math.random(1, #StunSounds)] end
@@ -303,6 +316,11 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
                 for _, child in ipairs(_G.TailsDollModel.Waist:GetChildren()) do
                     if not child:IsA("Sound") then continue end
                     if child.Name:find("CreamSpeech") then child:Stop() end
+                end
+                -- kill lines
+                if path:find("Line") and _G.PlayerHurtByTailsDollLately then
+                    local chara = _G.PlayerHurtByTailsDollLately:GetAttribute("Character")
+                    if KillLines[chara] then desc.SoundId = KillLines[chara] end
                 end
                 -- fuck that, i just recreate my sound ehhh
                 local sound = Instance.new("Sound")
