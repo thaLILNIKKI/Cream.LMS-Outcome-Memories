@@ -336,6 +336,7 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
             updating = true
             if desc.Text == "Tripwire" then desc.Text = " [CORRUPTED] " end
             if desc.Text == "TailsDoll" then desc.Text = "TailsDoll2" end
+            if desc.Text == "Can you feel the sunshine?" then desc.Text = "Successful copy.\nWARN: ReplicatedStorage missmatch!" end
             updating = false
         end
         update()
