@@ -275,7 +275,7 @@ local DownedSounds = {}
 for i = 1, 14 do table.insert(DownedSounds, myAsset("Down" .. i .. ".mp3")) end
 
 local KillLines = {
-    ["Sonic"] = { myAsset("Sonic.mp3"), myAsset("Sonic2.mp3") }
+    ["Sonic"] = { myAsset("Sonic.mp3"), myAsset("Sonic2.mp3") },
     ["Tails"] = { myAsset("Tails.mp3"),  myAsset("Tails2.mp3"),  myAsset("Tails3.mp3") },
     ["MetalSonic"] = { myAsset("MetalSonic.mp3"),  myAsset("MetalSonic2.mp3") },
     ["Amy"] = { myAsset("Amy.mp3"),  myAsset("Amy2.mp3"),  myAsset("Amy3.mp3"),  myAsset("Amy4.mp3") },
@@ -314,14 +314,13 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
             if path:find("Down") or path:find("Line") or path:find("Stun") or path:find("Hurt") then
                 -- mute others to avoid word stack
                 for _, child in ipairs(_G.TailsDollModel.Waist:GetChildren()) do
-                    if not child:IsA("Sound") then continue end
                     if child.Name:find("CreamSpeech") then child:Stop() end
                 end
                 -- kill lines
                 if path:find("Line") and _G.PlayerHurtByTailsDollLately then
                     local c = _G.PlayerHurtByTailsDollLately:GetAttribute("Character")
-                    if KillLines[c] and #KillLines[c] > 0 then 
-                        desc.SoundId = KillLines[c][math.random(1, #KillLines[c])] 
+                    if KillLines[c] then 
+                        desc.SoundId = KillLines[c][math.random(1, #KillLines[c])]
                         _G.PlayerHurtByTailsDollLately = nil
                     end
                 end
@@ -340,6 +339,17 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
                 -- die
                 desc.Volume = 0
                 desc:Stop()
+            end
+            if (desc.Name:find("Retract") or desc.Name:find("Unleashed")) and _G.TailsDollModel.Waist:FindFirstChildOfClass("Sound") then
+                desc.RollOffMaxDistance = desc.RollOffMaxDistance * 4
+                desc.RollOffMinDistance = desc.RollOffMinDistance * 2
+                desc.Volume = 1
+                for _, child in ipairs(_G.TailsDollModel.Waist:GetChildren()) do
+                    if child.Name:find("CreamSpeech") then 
+                        desc.Volume = 0
+                        desc:Stop()
+                    end
+                end
             end
         end
     end
