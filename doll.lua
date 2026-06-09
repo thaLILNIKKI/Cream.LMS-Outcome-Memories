@@ -208,8 +208,6 @@ local function updatePlayerModel(playerName)
 		
 		newHrp.CFrame = hrp.CFrame + hrpOffset
         myHead.C0 = ogHead.C0
-        
-        if plrModel.Health then plrModel.Health.Value = math.random(1, 100) end
 	end)
 
     return plrModel
@@ -252,12 +250,11 @@ end
     end
     _G.CreamOnTailsDollSkinCharacterConn = game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
 	    if character:GetAttribute("Character") ~= "TailsDoll" then return end
-        
         local healthxd = Instance.new("NumberValue")
         healthxd.Name = "Health"
         healthxd.Parent = character
-
         task.wait(3)
+        healthxd.Value = 0
         tryUpdatePlayerModel(character)
     end)
     tryUpdatePlayerModel(game.Players.LocalPlayer.Character)
