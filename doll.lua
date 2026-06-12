@@ -285,6 +285,8 @@ local function myAsset(fileName)
 end
 
 local assigns = {
+    -- [117478513053834] = myAsset("WinScreen.mp3"),
+
     [80901931085615] = myAsset("NormalChaseFix.mp3"),
     [129416111545242] = myAsset("TerrorRadius.mp3"),
     [112879248941055] = myAsset("LastLifeChase3.mp3"),
@@ -326,30 +328,32 @@ local KillLines = {
 
 print("[Cream x TailsDoll] Finished downloading custom sounds...")
 
-_G.CreamOnTailsDollSkinDescendantAddedConnection = _G.CreamOnTailsDollSkinDescendantAddedConnection or nil
-if _G.CreamOnTailsDollSkinDescendantAddedConnection then
-	_G.CreamOnTailsDollSkinDescendantAddedConnection:Disconnect()
-	_G.CreamOnTailsDollSkinDescendantAddedConnection = nil
-	print("[Cream x TailsDoll] Previous DescendantAdded connection destroyed")
+
+_G.CreamOnTailsDollGUIConn = _G.CreamOnTailsDollGUIConn or nil
+if _G.CreamOnTailsDollGUIConn then
+	_G.CreamOnTailsDollGUIConn:Disconnect()
+	_G.CreamOnTailsDollGUIConn = nil
+	print("[Cream x TailsDoll] Previous gui desc conn destroyed")
 end
-_G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(function(desc)
+_G.CreamOnTailsDollGUIConn = game:GetService("Players").LocalPlayer.PlayerGui.DescendantAdded:Connect(function(desc)
     if desc:IsA("TextLabel") then
         local path = desc:GetFullName()
         if path:find("CoreGui.") or path:find("skibidi board") then return end
         task.wait(0.001)
-        -- print(" '" .. desc.Text .. "' at " .. desc:GetFullName())
+         ---print(" '" .. desc.Text .. "' at " .. desc:GetFullName())
         local updating = false
-        local function update()
+        local function repl(label)
             if updating then return end
-            if desc.Text:find("TailsDoll2") then return end
+            if desc.Text:find("TailsDoll (2)") then return end
             updating = true
+            if desc.Text == "Reach Out" then desc.Text = "Tag~" end
             if desc.Text == "Tripwire" then desc.Text = " [CORRUPTED] " end
             if desc.Text == "TailsDoll" then desc.Text = "TailsDoll (2)" end
             if desc.Text == "Can you feel the sunshine?" then 
-                desc.TextWrapped = false
-                desc.Font = Enum.Font.Code
-                desc.TextColor3 = Color3.new(0.98, 0.98, 0.98)
-                desc.TextXAlignment = Enum.TextXAlignment.Left
+                -- desc.TextWrapped = false
+                -- desc.Font = Enum.Font.Code
+                -- desc.TextColor3 = Color3.new(0.98, 0.98, 0.98)
+                -- desc.TextXAlignment = Enum.TextXAlignment.Left
                 desc.Text = "[Info] Instance copied successfully.\n"
                           .."[WARN] ReplicatedStorage missmatch!\n"
                           .."[WARN] Unauthorized access!\n"
@@ -358,9 +362,21 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
             end
             updating = false
         end
-        update()
-        desc:GetPropertyChangedSignal("Text"):Connect(update)
+        repl(desc)
+        local conn = desc:GetPropertyChangedSignal("Text"):Connect(function()
+            if not desc then conn:Disconnect() return end
+            repl(desc)
+        end)
     end
+end)
+
+_G.CreamOnTailsDollSkinSoundConn = _G.CreamOnTailsDollSkinSoundConn or nil
+if _G.CreamOnTailsDollSkinSoundConn then
+	_G.CreamOnTailsDollSkinSoundConn:Disconnect()
+	_G.CreamOnTailsDollSkinSoundConn = nil
+	print("[Cream x TailsDoll] Previous sound desc conn destroyed")
+end
+_G.CreamOnTailsDollSkinSoundConn = workspace.Players.DescendantAdded:Connect(function(desc)
     if desc:IsA("Sound") then
 
         local id = tonumber(desc.SoundId:match("rbxassetid://(%d+)"))
@@ -371,7 +387,7 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
         -- if path:find("asd") or path:find("asd") then return end
 
         if path:find("HumanoidRootPart.") then
-            -- print(path)
+            -- print(path) ---
             if not _G.TailsDollModel then return end
 
             if (desc.Name:find("Retract") or desc.Name:find("Unleashed")) and _G.TailsDollModel.Waist:FindFirstChildOfClass("Sound") then
@@ -395,8 +411,11 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
             if desc.SoundId == "rbxassetid://77110140707717" then
                 local clone = desc:Clone()
                 clone.SoundId = AttackSounds[math.random(1, #AttackSounds)]
+                clone.Name = clone.SoundId
                 clone.Parent = desc.Parent
                 clone:Play()
+                clone.Loaded:Wait()
+                game:GetService("Debris"):AddItem(clone, clone.TimeLength + 0.5)
             end
 
             local isDefLine = (path:find("Line") and path:find(".Default"))
@@ -431,7 +450,6 @@ _G.CreamOnTailsDollSkinDescendantAddedConnection = game.DescendantAdded:Connect(
                 game:GetService("Debris"):AddItem(sound, sound.TimeLength + 0.5)
                 -- die
                 desc.Volume = 0
-                desc:Stop()
             end
         end
     end
