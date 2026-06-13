@@ -184,8 +184,8 @@ local function updatePlayerModel(playerName)
     --print(ogHead:GetFullName())
     --print(myHead:GetFullName())
 
-    local Mines = plrModel:FindFirstChild("Mines")
-    local Dodges = plrModel:FindFirstChild("Dodges")
+    -- local Mines = plrModel:FindFirstChild("Mines")
+    -- local Dodges = plrModel:FindFirstChild("Dodges")
 
 	_G.CreamOnTailsDollSkinUpdateConnection = _G.CreamOnTailsDollSkinUpdateConnection or nil
     if _G.CreamOnTailsDollSkinUpdateConnection then
@@ -212,7 +212,7 @@ local function updatePlayerModel(playerName)
 		newHrp.CFrame = hrp.CFrame + hrpOffset
         myHead.C0 = ogHead.C0
 
-        if Mines and Dodges then Dodges.Value = Mines.Value end
+        -- if Mines and Dodges then Dodges.Value = Mines.Value end
 	end)
 
     return plrModel
@@ -258,9 +258,9 @@ end
         local healthxd = Instance.new("NumberValue")
         healthxd.Name = "Health"
         healthxd.Parent = character
-        local Dodges = Instance.new("NumberValue")
-        Dodges.Name = "Dodges"
-        Dodges.Parent = character
+        -- local Dodges = Instance.new("NumberValue")
+        -- Dodges.Name = "Dodges"
+        -- Dodges.Parent = character
         task.wait(3)
         healthxd.Value = 0/0
         tryUpdatePlayerModel(character)
