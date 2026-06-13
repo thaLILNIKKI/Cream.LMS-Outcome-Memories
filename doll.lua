@@ -289,7 +289,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                 if updating then return end
                 if desc.Text:find("TailsDoll (2)") then return end
                 updating = true
-                if desc.Text == "S.T.E.P." then desc.Text = "Surprize\nPresent <3" end
+                if desc.Text == "S.T.E.P." then desc.Text = "FUN" end
                 if desc.Text == "Reach Out" then desc.Text = "Tag ~" end
                 if desc.Text == "Brighter Day" then desc.Text = "Laser thingy" end
                 if desc.Text == "Tripwire" then desc.Text = " [CORRUPTED] " end
@@ -429,6 +429,8 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         end
     end
     assigns = {
+        ["rbxassetid://117478513053834"] = myAsset("WinScreen.mp3"),
+	
         ["rbxassetid://80901931085615"] = myAsset("NormalChaseFix.mp3"),
         ["rbxassetid://129416111545242"] = myAsset("TerrorRadius.mp3"),
         ["rbxassetid://112879248941055"] = myAsset("LastLifeChase3.mp3"),
