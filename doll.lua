@@ -184,6 +184,9 @@ local function updatePlayerModel(playerName)
     --print(ogHead:GetFullName())
     --print(myHead:GetFullName())
 
+    local Mines = plrModel:FindFirstChild("Mines")
+    local Dodges = plrModel:FindFirstChild("Dodges")
+
 	_G.CreamOnTailsDollSkinUpdateConnection = _G.CreamOnTailsDollSkinUpdateConnection or nil
     if _G.CreamOnTailsDollSkinUpdateConnection then
         _G.CreamOnTailsDollSkinUpdateConnection:Disconnect()
@@ -208,6 +211,8 @@ local function updatePlayerModel(playerName)
 		
 		newHrp.CFrame = hrp.CFrame + hrpOffset
         myHead.C0 = ogHead.C0
+
+        if Mines and Dodges then Dodges.Value = Mines.Value end
 	end)
 
     return plrModel
@@ -253,8 +258,11 @@ end
         local healthxd = Instance.new("NumberValue")
         healthxd.Name = "Health"
         healthxd.Parent = character
+        local Dodges = Instance.new("NumberValue")
+        Dodges.Name = "Dodges"
+        Dodges.Parent = character
         task.wait(3)
-        healthxd.Value = 0
+        healthxd.Value = 0/0
         tryUpdatePlayerModel(character)
     end)
     tryUpdatePlayerModel(game.Players.LocalPlayer.Character)
@@ -262,197 +270,196 @@ end
 
 print("[Cream x TailsDoll] Players scanned, game state and your char being listened.")
 
--- custom sounds..
-print("[Cream x TailsDoll] Loading custom sounds...")
-local function myAsset(fileName)
-    local cachePath = "cache/cream-on-doll/" .. fileName
-    if isfile(cachePath) then return getcustomasset(cachePath) end
-    local success, result = pcall(
-        function()
-            return game:HttpGet(
-                "https://github.com/thaLILNIKKI/Cream.LMS-for-TailsDoll-Outcome-Memories/releases/download/"
-                .. "assets/" .. fileName
-            )
-        end
-    )
-    if success and result then
-        writefile(cachePath, result)
-        return getcustomasset(cachePath)
-    else
-        warn("[Cream x TailsDoll] failed to load " .. fileName)
-        return nil
+-- CUSTOM TEXT
+
+    _G.CreamOnTailsDollGUIConn = _G.CreamOnTailsDollGUIConn or nil
+    if _G.CreamOnTailsDollGUIConn then
+        _G.CreamOnTailsDollGUIConn:Disconnect()
+        _G.CreamOnTailsDollGUIConn = nil
+        print("[Cream x TailsDoll] Previous gui desc conn destroyed")
     end
-end
-
-local assigns = {
-    -- [117478513053834] = myAsset("WinScreen.mp3"),
-
-    [80901931085615] = myAsset("NormalChaseFix.mp3"),
-    [129416111545242] = myAsset("TerrorRadius.mp3"),
-    [112879248941055] = myAsset("LastLifeChase3.mp3"),
-	
-    [112976135484851] = myAsset("Unleashed1.mp3"),
-    [106071428647005]  = myAsset("Unleashed2.mp3"),
-    [87302988643016]  = myAsset("Unleashed3.mp3"),
-    [131820864449998] = myAsset("Retract.mp3"), -- giggle or smth here ~
-
-	[97101227703333] = "rbxassetid://139116822099909",  -- .Hit1]  2011x Hit2
-	[93465914238963] = "rbxassetid://88164444698409",  -- Lilith.Hit2] 
-	[113251186335660] = "rbxassetid://5507830073",  -- Lilith.Hit3] 
-	
-    [73636680793269] = "rbxassetid://77110140707717",  -- basic Swing
-    [108753423324802] = "rbxassetid://77110140707717",  -- basic Swing
-    [134998846301914] = "rbxassetid://77110140707717",  -- basic Swing
-}
-
-local StunSounds = {}
-for i = 1, 28 do table.insert(StunSounds, myAsset("Stun" .. i .. ".mp3")) end
-
-local DownedSounds = {}
-for i = 1, 14 do table.insert(DownedSounds, myAsset("Down" .. i .. ".mp3")) end
-
-local AttackSounds = {}
-for i = 1, 8 do table.insert(AttackSounds, myAsset("Attack" .. i .. ".mp3")) end
-
-local KillLines = {
-    ["Sonic"] = { myAsset("Sonic.mp3"), myAsset("Sonic2.mp3") },
-    ["Tails"] = { myAsset("Tails.mp3"),  myAsset("Tails2.mp3"),  myAsset("Tails3.mp3") },
-    ["MetalSonic"] = { myAsset("MetalSonic.mp3"),  myAsset("MetalSonic2.mp3") },
-    ["Amy"] = { myAsset("Amy.mp3"),  myAsset("Amy2.mp3"),  myAsset("Amy3.mp3"),  myAsset("Amy4.mp3") },
-    ["Silver"] = { myAsset("Silver.mp3") },
-    ["Blaze"] = { myAsset("Blaze.mp3") },
-    ["Eggman"] = { myAsset("Eggman.mp3") },
-    ["Cream"] = { myAsset("Cream.mp3"),  myAsset("Cream2.mp3") },
-    ["Knuckles"] = { myAsset("Knuckles.mp3") }
-}
-
-print("[Cream x TailsDoll] Finished downloading custom sounds...")
-
-
-_G.CreamOnTailsDollGUIConn = _G.CreamOnTailsDollGUIConn or nil
-if _G.CreamOnTailsDollGUIConn then
-	_G.CreamOnTailsDollGUIConn:Disconnect()
-	_G.CreamOnTailsDollGUIConn = nil
-	print("[Cream x TailsDoll] Previous gui desc conn destroyed")
-end
-_G.CreamOnTailsDollGUIConn = game:GetService("Players").LocalPlayer.PlayerGui.DescendantAdded:Connect(function(desc)
-    if desc:IsA("TextLabel") then
-        local path = desc:GetFullName()
-        if path:find("CoreGui.") or path:find("skibidi board") then return end
-        task.wait(0.001)
-         ---print(" '" .. desc.Text .. "' at " .. desc:GetFullName())
-        local updating = false
-        local function repl(label)
-            if updating then return end
-            if desc.Text:find("TailsDoll (2)") then return end
-            updating = true
-            if desc.Text == "Reach Out" then desc.Text = "Tag~" end
-            if desc.Text == "Tripwire" then desc.Text = " [CORRUPTED] " end
-            if desc.Text == "TailsDoll" then desc.Text = "TailsDoll (2)" end
-            if desc.Text == "Can you feel the sunshine?" then 
-                -- desc.TextWrapped = false
-                -- desc.Font = Enum.Font.Code
-                -- desc.TextColor3 = Color3.new(0.98, 0.98, 0.98)
-                -- desc.TextXAlignment = Enum.TextXAlignment.Left
-                desc.Text = "[Info] Instance copied successfully.\n"
-                          .."[WARN] ReplicatedStorage missmatch!\n"
-                          .."[WARN] Unauthorized access!\n"
-                          .."> dont worry, thats just a way i can play :>\n"
-                          .."Syntax error."
+    _G.CreamOnTailsDollGUIConn = game:GetService("Players").LocalPlayer.PlayerGui.DescendantAdded:Connect(function(desc)
+        if desc:IsA("TextLabel") then
+            local path = desc:GetFullName()
+            if path:find("CoreGui.") or path:find("skibidi board") then return end
+            task.wait(0.001)
+            ---print(" '" .. desc.Text .. "' at " .. desc:GetFullName())
+            local updating = false
+            local function repl(label)
+                if updating then return end
+                if desc.Text:find("TailsDoll (2)") then return end
+                updating = true
+                if desc.Text == "S.T.E.P." then desc.Text = "Surprize\nPresent <3" end
+                if desc.Text == "Reach Out" then desc.Text = "Tag ~" end
+                if desc.Text == "Brighter Day" then desc.Text = "Laser thingy" end
+                if desc.Text == "Tripwire" then desc.Text = " [CORRUPTED] " end
+                if desc.Text == "TailsDoll" then desc.Text = "TailsDoll (2)" end
+                if desc.Text == "Can you feel the sunshine?" then 
+                    -- desc.TextWrapped = false
+                    -- desc.Font = Enum.Font.Code
+                    -- desc.TextColor3 = Color3.new(0.98, 0.98, 0.98)
+                    -- desc.TextXAlignment = Enum.TextXAlignment.Left
+                    desc.Text = "[Info] Instance copied successfully.\n"
+                            .."[WARN] ReplicatedStorage missmatch!\n"
+                            .."[WARN] Unauthorized access!\n"
+                            .."> dont worry, thats just a way i can play :>\n"
+                            .."Syntax error."
+                end
+                updating = false
             end
-            updating = false
-        end
-        repl(desc)
-        local conn = desc:GetPropertyChangedSignal("Text"):Connect(function()
-            if not desc then conn:Disconnect() return end
             repl(desc)
-        end)
+            local conn = desc:GetPropertyChangedSignal("Text"):Connect(function()
+                if not desc then conn:Disconnect() return end
+                repl(desc)
+            end)
+        end
+    end)
+    print("[Cream x TailsDoll] Listening for your GUI...")
+
+-- CUSTOM SOUNDS
+    local assigns = { ["rbxassetid://97101227703333"] = "rbxassetid://139116822099909" }
+    local StunSounds = {}
+    local DownedSounds = {}
+    local AttackSounds = {}
+
+    _G.CreamOnTailsDollSkinSoundConn = _G.CreamOnTailsDollSkinSoundConn or nil
+    if _G.CreamOnTailsDollSkinSoundConn then
+        _G.CreamOnTailsDollSkinSoundConn:Disconnect()
+        _G.CreamOnTailsDollSkinSoundConn = nil
+        print("[Cream x TailsDoll] Previous sound desc conn destroyed")
     end
-end)
+    _G.CreamOnTailsDollSkinSoundConn = workspace.DescendantAdded:Connect(function(desc)
+        if desc:IsA("Sound") then
 
-_G.CreamOnTailsDollSkinSoundConn = _G.CreamOnTailsDollSkinSoundConn or nil
-if _G.CreamOnTailsDollSkinSoundConn then
-	_G.CreamOnTailsDollSkinSoundConn:Disconnect()
-	_G.CreamOnTailsDollSkinSoundConn = nil
-	print("[Cream x TailsDoll] Previous sound desc conn destroyed")
-end
-_G.CreamOnTailsDollSkinSoundConn = workspace.DescendantAdded:Connect(function(desc)
-    if desc:IsA("Sound") then
+            if assigns[desc.SoundId] then desc.SoundId = assigns[desc.SoundId] end
 
-        local id = tonumber(desc.SoundId:match("rbxassetid://(%d+)"))
-        if id and assigns[id] then desc.SoundId = assigns[id] end
+            local path = desc:GetFullName()
 
-        local path = desc:GetFullName()
-
-        -- if path:find("asd") or path:find("asd") then return end
-
-        if path:find("HumanoidRootPart.") then
             -- print(path) ---
-            if not _G.TailsDollModel then return end
 
-            if (desc.Name:find("Retract") or desc.Name:find("Unleashed")) and _G.TailsDollModel.Waist:FindFirstChildOfClass("Sound") then
-                desc.RollOffMaxDistance = desc.RollOffMaxDistance * 4
-                desc.RollOffMinDistance = desc.RollOffMinDistance * 2
-                desc.Volume = 1
-                for _, child in ipairs(_G.TailsDollModel.Waist:GetChildren()) do
-                    if child.Name:find("CreamSpeech") then 
-                        desc.Volume = 0
-                        desc:Stop()
+            -- if path:find("asd") or path:find("asd") then return end
+
+            if path:find("HumanoidRootPart.") then
+                if not _G.TailsDollModel then return end
+
+                if (desc.Name:find("Retract") or desc.Name:find("Unleashed")) and _G.TailsDollModel.Waist:FindFirstChildOfClass("Sound") then
+                    desc.RollOffMaxDistance = desc.RollOffMaxDistance * 4
+                    desc.RollOffMinDistance = desc.RollOffMinDistance * 2
+                    desc.Volume = 1
+                    for _, child in ipairs(_G.TailsDollModel.Waist:GetChildren()) do
+                        if child.Name:find("CreamSpeech") then 
+                            desc.Volume = 0
+                            desc:Stop()
+                        end
                     end
                 end
-            end
 
-            local player = desc.Parent.Parent
-            if player:GetAttribute("Character") ~= "TailsDoll" then
-                if path:find(".Blood Hit") then _G.LastHurtenPlayer = player end
-                return 
-            end
-
-            if desc.SoundId == "rbxassetid://77110140707717" then
-                local clone = desc:Clone()
-                clone.SoundId = AttackSounds[math.random(1, #AttackSounds)]
-                clone.Name = clone.SoundId
-                clone.Parent = desc.Parent
-                clone:Play()
-                clone.Loaded:Wait()
-                game:GetService("Debris"):AddItem(clone, clone.TimeLength + 0.5)
-            end
-
-            local isDefLine = (path:find("Line") and path:find(".Default"))
-
-            if isDefLine or path:find(".Downed") then desc.SoundId = DownedSounds[math.random(1, #DownedSounds)] end
-            if path:find(".Hurt") then desc.SoundId = StunSounds[math.random(1, #StunSounds)] end
-
-            if isDefLine or path:find(".Downed") or path:find(".Hurt") then
-                -- mute others to avoid word stack
-                for _, child in ipairs(_G.TailsDollModel.Waist:GetChildren()) do
-                    if child.Name:find("CreamSpeech") then child:Stop() end
+                local player = desc.Parent.Parent
+                if player:GetAttribute("Character") ~= "TailsDoll" then
+                    if path:find(".Blood Hit") then _G.LastHurtenPlayer = player end
+                    return 
                 end
-                -- kill lines
-                if isDefLine and _G.LastHurtenPlayer then
-                    local c = _G.LastHurtenPlayer:GetAttribute("Character")
-                    if KillLines[c] then 
-                        desc.SoundId = KillLines[c][math.random(1, #KillLines[c])]
-                        _G.LastHurtenPlayer = nil
+
+                if desc.SoundId == "rbxassetid://77110140707717" then
+                    local clone = desc:Clone()
+                    clone.SoundId = AttackSounds[math.random(1, #AttackSounds)]
+                    clone.Name = clone.SoundId
+                    clone.Parent = desc.Parent
+                    clone:Play()
+                    clone.Loaded:Wait()
+                    game:GetService("Debris"):AddItem(clone, clone.TimeLength + 0.5)
+                end
+
+                local isDefLine = (path:find("Line") and path:find(".Default"))
+
+                if isDefLine or path:find(".Downed") then desc.SoundId = DownedSounds[math.random(1, #DownedSounds)] end
+                if path:find(".Hurt") then desc.SoundId = StunSounds[math.random(1, #StunSounds)] end
+
+                if isDefLine or path:find(".Downed") or path:find(".Hurt") then
+                    -- mute others to avoid word stack
+                    for _, child in ipairs(_G.TailsDollModel.Waist:GetChildren()) do
+                        if child.Name:find("CreamSpeech") then child:Stop() end
                     end
+                    -- kill lines
+                    if isDefLine and _G.LastHurtenPlayer then
+                        local c = _G.LastHurtenPlayer:GetAttribute("Character")
+                        if KillLines[c] then 
+                            desc.SoundId = KillLines[c][math.random(1, #KillLines[c])]
+                            _G.LastHurtenPlayer = nil
+                        end
+                    end
+                    -- fuck that, i just recreate my sound ehhh
+                    local sound = Instance.new("Sound")
+                    sound.Name = "CreamSpeech - " .. desc.SoundId
+                    sound.SoundId = desc.SoundId
+                    sound.Volume = desc.Volume
+                    sound.RollOffMaxDistance = desc.RollOffMaxDistance
+                    sound.RollOffMinDistance = desc.RollOffMinDistance
+                    sound.SoundGroup = desc.SoundGroup
+                    sound.Parent = _G.TailsDollModel.Waist
+                    sound:Play()
+                    sound.Loaded:Wait()
+                    game:GetService("Debris"):AddItem(sound, sound.TimeLength + 0.5)
+                    -- die
+                    desc.Volume = 0
                 end
-                -- fuck that, i just recreate my sound ehhh
-                local sound = Instance.new("Sound")
-                sound.Name = "CreamSpeech - " .. desc.SoundId
-                sound.SoundId = desc.SoundId
-                sound.Volume = desc.Volume
-                sound.RollOffMaxDistance = desc.RollOffMaxDistance
-                sound.RollOffMinDistance = desc.RollOffMinDistance
-                sound.SoundGroup = desc.SoundGroup
-                sound.Parent = _G.TailsDollModel.Waist
-                sound:Play()
-                sound.Loaded:Wait()
-                game:GetService("Debris"):AddItem(sound, sound.TimeLength + 0.5)
-                -- die
-                desc.Volume = 0
             end
         end
+    end)
+    print("[Cream x TailsDoll] Listening for new dynamuc sounds in workspace...")
+
+    print("[Cream x TailsDoll] Loading custom sounds...")
+    local function myAsset(fileName)
+        local cachePath = "cache/cream-on-doll/" .. fileName
+        if isfile(cachePath) then return getcustomasset(cachePath) end
+        local success, result = pcall(
+            function()
+                return game:HttpGet(
+                    "https://github.com/thaLILNIKKI/Cream.LMS-for-TailsDoll-Outcome-Memories/releases/download/"
+                    .. "assets/" .. fileName
+                )
+            end
+        )
+        if success and result then
+            writefile(cachePath, result)
+            return getcustomasset(cachePath)
+        else
+            warn("[Cream x TailsDoll] failed to load " .. fileName)
+            return nil
+        end
     end
-end)
+    assigns = {
+        ["rbxassetid://80901931085615"] = myAsset("NormalChaseFix.mp3"),
+        ["rbxassetid://129416111545242"] = myAsset("TerrorRadius.mp3"),
+        ["rbxassetid://112879248941055"] = myAsset("LastLifeChase3.mp3"),
+        
+        ["rbxassetid://112976135484851"] = myAsset("Unleashed1.mp3"),
+        ["rbxassetid://106071428647005"]  = myAsset("Unleashed2.mp3"),
+        ["rbxassetid://87302988643016"]  = myAsset("Unleashed3.mp3"),
+        ["rbxassetid://131820864449998"] = myAsset("Retract.mp3"), -- giggle or smth here ~
+
+        ["rbxassetid://97101227703333"] = "rbxassetid://139116822099909",  -- .Hit1]  2011x Hit2
+        ["rbxassetid://93465914238963"] = "rbxassetid://88164444698409",  -- Lilith.Hit2] 
+        ["rbxassetid://113251186335660"] = "rbxassetid://5507830073",  -- Lilith.Hit3] 
+        
+        ["rbxassetid://73636680793269"] = "rbxassetid://77110140707717",  -- basic Swing
+        ["rbxassetid://108753423324802"] = "rbxassetid://77110140707717",  -- basic Swing
+        ["rbxassetid://134998846301914"] = "rbxassetid://77110140707717",  -- basic Swing
+    }
+    KillLines = {
+        ["Sonic"] = { myAsset("Sonic.mp3"), myAsset("Sonic2.mp3") },
+        ["Tails"] = { myAsset("Tails.mp3"),  myAsset("Tails2.mp3"),  myAsset("Tails3.mp3") },
+        ["MetalSonic"] = { myAsset("MetalSonic.mp3"),  myAsset("MetalSonic2.mp3") },
+        ["Amy"] = { myAsset("Amy.mp3"),  myAsset("Amy2.mp3"),  myAsset("Amy3.mp3"),  myAsset("Amy4.mp3") },
+        ["Silver"] = { myAsset("Silver.mp3") },
+        ["Blaze"] = { myAsset("Blaze.mp3") },
+        ["Eggman"] = { myAsset("Eggman.mp3") },
+        ["Cream"] = { myAsset("Cream.mp3"),  myAsset("Cream2.mp3") },
+        ["Knuckles"] = { myAsset("Knuckles.mp3") }
+    }
+    for i = 1, 28 do table.insert(StunSounds, myAsset("Stun" .. i .. ".mp3")) end
+    for i = 1, 14 do table.insert(DownedSounds, myAsset("Down" .. i .. ".mp3")) end
+    for i = 1, 8 do table.insert(AttackSounds, myAsset("Attack" .. i .. ".mp3")) end
+    print("[Cream x TailsDoll] Finished downloading custom sounds...")
 
 print("[Cream x TailsDoll] Ready!")
