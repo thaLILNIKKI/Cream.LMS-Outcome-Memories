@@ -182,7 +182,7 @@ local function updatePlayerModel(playerName)
 	end
 
     -- glide anim lol
-	if not plrModel:GetAttribute("Glide anim was replaced") then
+	if not plrModel:GetAttribute("Glide_anim_was_replaced") then
 	    local oldanim = plrModel.Glide.ANIMS.Glide or plrModel.Glide.ANIMS.Glide_OLD
 	    oldanim.Name = oldanim.Name .. "_OLD"
 	    local newanim = game:GetService("ReplicatedStorage"):FindFirstChild("Characters", true):FindFirstChild("Cream", true):FindFirstChild("Glide", true):Clone()
@@ -192,7 +192,7 @@ local function updatePlayerModel(playerName)
 	    task.wait()
 	    plrModel.Glide.Enabled = true
 		
-	    plrModel:SetAttribute("Glide anim was replaced", true)
+	    plrModel:SetAttribute("Glide_anim_was_replaced", true)
 	end
 
     --print(ogHead:GetFullName())
@@ -275,7 +275,7 @@ end
         -- Dodges.Parent = character
         task.wait(3)
         healthxd.Value = 0/0
-	    character:SetAttribute("Glide anim was replaced", false)
+	    character:SetAttribute("Glide_anim_was_replaced", false)
         tryUpdatePlayerModel(character)
     end)
     tryUpdatePlayerModel(game.Players.LocalPlayer.Character)
