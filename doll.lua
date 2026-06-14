@@ -140,6 +140,12 @@ local function updatePlayerModel(playerName)
 	if plrModel:GetAttribute("Character") ~= "TailsDoll" then return end
 
     print("[Cream x TailsDoll] Updating model for " .. plrModel.Name .. "...")
+
+	local oldOverlayModel = plrModel:FindFirstChild("OverlayModel")
+	if oldOverlayModel then 
+        oldOverlayModel:Destroy()
+        oldOverlayModel = nil
+    end
     
 	local hrp = plrModel:FindFirstChild("HumanoidRootPart", true)
 	if not hrp then return end
@@ -166,6 +172,7 @@ local function updatePlayerModel(playerName)
 
     local mdl = src:Clone()
 	mdl.Parent = plrModel
+	mdl.Name = "OverlayModel"
 
 	local newHrp = mdl:FindFirstChild("HumanoidRootPart", true)
 	if not newHrp then mdl:Destroy() return end
@@ -181,27 +188,18 @@ local function updatePlayerModel(playerName)
         end
 	end
 
-    -- glide anim lol
-	if not plrModel:GetAttribute("Glide_anim_was_replaced") then
-	    local oldanim = plrModel.Glide.ANIMS.Glide or plrModel.Glide.ANIMS.Glide_OLD
-	    oldanim.Name = oldanim.Name .. "_OLD"
-	    local newanim = game:GetService("ReplicatedStorage"):FindFirstChild("Characters", true):FindFirstChild("Cream", true):FindFirstChild("Glide", true):Clone()
-	    newanim.Parent = oldanim.Parent
-	
-	    plrModel.Glide.Enabled = false
-	    task.wait()
-	    plrModel.Glide.Enabled = true
-		
-	    plrModel:SetAttribute("Glide_anim_was_replaced", true)
-	end
-
-    --print(ogHead:GetFullName())
-    --print(myHead:GetFullName())
+    -- print(ogHead:GetFullName())
+    -- print(myHead:GetFullName())
 
     -- local Mines = plrModel:FindFirstChild("Mines")
     -- local Dodges = plrModel:FindFirstChild("Dodges")
 
     _G.CreamOnTailsDollSkinHeartbeatConnections = _G.CreamOnTailsDollSkinHeartbeatConnections or {}
+    if _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] then
+        _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name]:Disconnect()
+        _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = nil
+        warn("[Cream x TailsDoll] Disconnecting old heartbeat connection...")
+    end
 	_G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = game:GetService("RunService").Heartbeat:Connect(function()
 		if not mdl or not mdl.Parent then
 			warn("[Cream x TailsDoll] Model destroyed, restarting overlay")
@@ -213,9 +211,11 @@ local function updatePlayerModel(playerName)
 			return
 		end
 		if plrModel:GetAttribute("Character") ~= "TailsDoll" then
+            warn("[Cream x TailsDoll] Player ", plrModel.Name, "isn't TailsDoll rn.")
             if _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] then
                 _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name]:Disconnect()
                 _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = nil
+                warn("[Cream x TailsDoll] Disconnecting old heartbeat connection...")
             end
 			mdl:Destroy()
 			return
@@ -227,6 +227,57 @@ local function updatePlayerModel(playerName)
         myHead.C0 = CFrame.new(myHead.C0.Position) * (ogHead.C0 - ogHead.C0.Position)
         -- if Mines and Dodges then Dodges.Value = Mines.Value end
 	end)
+
+    local function renameByAttribute(attrName)
+        for _, obj in ipairs(mdl:GetDescendants()) do
+            local targetName = obj:GetAttribute(attrName)
+            if targetName then obj.Name = targetName end
+        end
+    end
+
+    local isGilding = false
+    local CreamGlideTrack = plrModel.Humanoid.Animator:LoadAnimation(
+        game:GetService("ReplicatedStorage"):FindFirstChild("Characters", true)
+        :FindFirstChild("Cream", true):FindFirstChild("Glide", true)
+    )
+    CreamGlideTrack.Name = "CreamGlide"
+
+    _G.CreamOnTailsDollSkinAnimationPlayedConnections = _G.CreamOnTailsDollSkinAnimationPlayedConnections or {}
+    if _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] then
+        _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name]:Disconnect()
+        _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] = nil
+    end
+	_G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] = plrModel.Humanoid.Animator.AnimationPlayed:Connect(function(track)
+		if not mdl or not mdl.Parent or (plrModel:GetAttribute("Character") ~= "TailsDoll") then
+			warn("[Cream x TailsDoll] Disconnecting animatior...")
+            if _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] then
+                _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name]:Disconnect()
+                _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] = nil
+            end
+			return
+		end
+
+        -- print("PLAYED", track.Name, track.Animation.AnimationId)
+
+        if track.Name ~= CreamGlideTrack.Name then 
+            CreamGlideTrack:Stop()
+            renameByAttribute("rename_newName") 
+            track.Stopped:Once(function() if isGilding then
+                renameByAttribute("rename_oldName")
+                CreamGlideTrack:Play(0.1)
+            end end)
+        end
+        if track.Name == "Glide" then
+            isGilding = true
+            track.Stopped:Once(function()
+                isGilding = false
+                CreamGlideTrack:Stop(0.1)
+                renameByAttribute("rename_newName")
+            end)
+            renameByAttribute("rename_oldName")
+            CreamGlideTrack:Play(0.1)
+        end
+    end)
 
     return plrModel
 end
