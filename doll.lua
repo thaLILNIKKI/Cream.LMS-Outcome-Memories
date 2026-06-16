@@ -288,7 +288,6 @@ local function tryUpdatePlayerModel(model)
 end
 
 local function walkPlayers()
-    player = nil
     task.wait(1)
     for _, model in ipairs(workspace.Players:GetChildren()) do
     	if not model:IsA("Model") then continue end
