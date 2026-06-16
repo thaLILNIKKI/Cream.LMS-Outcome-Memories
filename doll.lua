@@ -415,7 +415,6 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
     local DownedSounds = {}
     local AttackSounds = {}
     local lastBloodHitPlayer = nil
-    local lastSoundProcessTime = {}
 
     _G.CreamOnTailsDollSkinSoundConn = _G.CreamOnTailsDollSkinSoundConn or nil
     if _G.CreamOnTailsDollSkinSoundConn then
@@ -473,11 +472,6 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                     if path:find(".Hurt") then desc.SoundId = StunSounds[math.random(1, #StunSounds)] end
 
                     if isDefLine or path:find(".Downed") or path:find(".Hurt") then
-                        if lastSoundProcessTime[path] and tick() - lastSoundProcessTime[path] < 0.05 then
-                            return
-                        end
-                        lastSoundProcessTime[path] = tick()
-
                         for _, child in ipairs(player.Waist:GetChildren()) do
                             if child.Name:find("CreamSpeech") then child:Stop() end
                         end
