@@ -131,13 +131,18 @@ dress.Material = Enum.Material.Sandstone
 
 print("[Cream x TailsDoll] Model setup done...")
 
---- FUCKING SERVER SIDED PLAYER BUILD HOLY HELL
+-- FUCKING SERVER SIDED PLAYER BUILD HOLY HELL
+
+local updatingModels = {}
 
 local function updatePlayerModel(playerName)
-	local plrModel = workspace.Players:FindFirstChild(playerName)
-	if not plrModel then return end
+    if updatingModels[playerName] then return end
+    updatingModels[playerName] = true
 
-	if plrModel:GetAttribute("Character") ~= "TailsDoll" then return end
+	local plrModel = workspace.Players:FindFirstChild(playerName)
+	if not plrModel then updatingModels[playerName] = nil return end
+
+	if plrModel:GetAttribute("Character") ~= "TailsDoll" then updatingModels[playerName] = nil return end
 
     print("[Cream x TailsDoll] Updating model for " .. plrModel.Name .. "...")
 
@@ -148,7 +153,7 @@ local function updatePlayerModel(playerName)
     end
     
 	local hrp = plrModel:FindFirstChild("HumanoidRootPart", true)
-	if not hrp then return end
+	if not hrp then updatingModels[playerName] = nil return end
 
 	local ogHead = plrModel:FindFirstChildOfClass("Motor6D", true)
 
@@ -175,7 +180,7 @@ local function updatePlayerModel(playerName)
 	mdl.Name = "OverlayModel"
 
 	local newHrp = mdl:FindFirstChild("HumanoidRootPart", true)
-	if not newHrp then mdl:Destroy() return end
+	if not newHrp then mdl:Destroy() updatingModels[playerName] = nil return end
 
 	local myHead = mdl:FindFirstChildOfClass("Motor6D", true)
 
@@ -200,23 +205,32 @@ local function updatePlayerModel(playerName)
         _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = nil
         warn("[Cream x TailsDoll] Disconnecting old heartbeat connection...")
     end
+
+    local isActive = true
+
 	_G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = game:GetService("RunService").Heartbeat:Connect(function()
 		if not mdl or not mdl.Parent then
+            if not isActive then return end
+            isActive = false
 			warn("[Cream x TailsDoll] Model destroyed, restarting overlay")
             if _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] then
                 _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name]:Disconnect()
                 _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = nil
             end
+            updatingModels[plrModel.Name] = nil
 			updatePlayerModel(playerName)
 			return
 		end
 		if plrModel:GetAttribute("Character") ~= "TailsDoll" then
+            if not isActive then return end
+            isActive = false
             warn("[Cream x TailsDoll] Player ", plrModel.Name, "isn't TailsDoll rn.")
             if _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] then
                 _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name]:Disconnect()
                 _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = nil
                 warn("[Cream x TailsDoll] Disconnecting old heartbeat connection...")
             end
+            updatingModels[plrModel.Name] = nil
 			mdl:Destroy()
 			return
 		end
@@ -254,6 +268,7 @@ local function updatePlayerModel(playerName)
                 _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name]:Disconnect()
                 _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] = nil
             end
+            updatingModels[plrModel.Name] = nil
 			return
 		end
 
@@ -279,6 +294,7 @@ local function updatePlayerModel(playerName)
         end
     end)
 
+    updatingModels[plrModel.Name] = nil
     return plrModel
 end
 
@@ -359,13 +375,13 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         updatingTextLabel = false
     end
 
-    _G.CreamOnTailsDollGUIConn = _G.CreamOnTailsDollGUIConn or nil
-    if _G.CreamOnTailsDollGUIConn then
-        _G.CreamOnTailsDollGUIConn:Disconnect()
-        _G.CreamOnTailsDollGUIConn = nil
-        print("[Cream x TailsDoll] Previous gui desc conn destroyed")
+    _G.CreamOnTailsDollGUIConns = _G.CreamOnTailsDollGUIConns or {}
+    for _, conn in ipairs(_G.CreamOnTailsDollGUIConns) do
+        pcall(function() conn:Disconnect() end)
     end
-    _G.CreamOnTailsDollGUIConn = game:GetService("Players").LocalPlayer.PlayerGui.DescendantAdded:Connect(function(desc)
+    table.clear(_G.CreamOnTailsDollGUIConns)
+
+    local function hookLabel(desc)
         if desc:IsA("TextLabel") then
             local path = desc:GetFullName()
             if path:find("CoreGui.") or path:find("skibidi board") then return end
@@ -376,19 +392,19 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                 if not desc then conn:Disconnect() return end
                 replTextLabel(desc)
             end)
+            table.insert(_G.CreamOnTailsDollGUIConns, conn)
         end
-    end)
+    end
+
+    _G.CreamOnTailsDollGUIConn = _G.CreamOnTailsDollGUIConn or nil
+    if _G.CreamOnTailsDollGUIConn then
+        _G.CreamOnTailsDollGUIConn:Disconnect()
+        _G.CreamOnTailsDollGUIConn = nil
+        print("[Cream x TailsDoll] Previous gui desc conn destroyed")
+    end
+    _G.CreamOnTailsDollGUIConn = game:GetService("Players").LocalPlayer.PlayerGui.DescendantAdded:Connect(hookLabel)
     for _, desc in ipairs(game:GetService("Players").LocalPlayer.PlayerGui:GetDescendants()) do
-        if desc:IsA("TextLabel") then
-            local path = desc:GetFullName()
-            if path:find("CoreGui.") or path:find("skibidi board") then return end
-            ---print(" '" .. desc.Text .. "' at " .. desc:GetFullName())
-            replTextLabel(desc)
-            local conn = desc:GetPropertyChangedSignal("Text"):Connect(function()
-                if not desc then conn:Disconnect() return end
-                replTextLabel(desc)
-            end)
-        end
+        hookLabel(desc)
     end
     print("[Cream x TailsDoll] Listening for your GUI...")
 --
@@ -398,6 +414,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
     local StunSounds = {}
     local DownedSounds = {}
     local AttackSounds = {}
+    local lastBloodHitPlayer = nil -- _G is a fucking horror
 
     _G.CreamOnTailsDollSkinSoundConn = _G.CreamOnTailsDollSkinSoundConn or nil
     if _G.CreamOnTailsDollSkinSoundConn then
@@ -432,7 +449,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                     end
                 end
 
-                if path:find(".Blood Hit") then _G.LastBloodHitPlayer = player end
+                if path:find(".Blood Hit") then lastBloodHitPlayer = player end
 
                 if isTailsDoll then
 
@@ -457,11 +474,11 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                             if child.Name:find("CreamSpeech") then child:Stop() end
                         end
                         -- kill lines
-                        if isDefLine and _G.LastBloodHitPlayer then
-                            local c = _G.LastBloodHitPlayer:GetAttribute("Character")
+                        if isDefLine and lastBloodHitPlayer then
+                            local c = lastBloodHitPlayer:GetAttribute("Character")
                             if KillLines[c] then 
                                 desc.SoundId = KillLines[c][math.random(1, #KillLines[c])]
-                                _G.LastBloodHitPlayer = nil
+                                lastBloodHitPlayer = nil
                             end
                         end
                         -- fuck that, i just recreate my sound ehhh
