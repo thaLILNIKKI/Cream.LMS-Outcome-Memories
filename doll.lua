@@ -389,7 +389,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
             ---print(" '" .. desc.Text .. "' at " .. desc:GetFullName())
             replTextLabel(desc)
             local conn = desc:GetPropertyChangedSignal("Text"):Connect(function()
-                if not desc then conn:Disconnect() return end
+                if not desc or not desc.Parent then conn:Disconnect() return end
                 replTextLabel(desc)
             end)
             table.insert(_G.CreamOnTailsDollGUIConns, conn)
@@ -414,7 +414,8 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
     local StunSounds = {}
     local DownedSounds = {}
     local AttackSounds = {}
-    local lastBloodHitPlayer = nil -- _G is a fucking horror
+    local lastBloodHitPlayer = nil
+    local lastSoundProcessTime = {}
 
     _G.CreamOnTailsDollSkinSoundConn = _G.CreamOnTailsDollSkinSoundConn or nil
     if _G.CreamOnTailsDollSkinSoundConn then
@@ -460,7 +461,10 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         clone.Parent = desc.Parent
                         clone:Play()
                         clone.Loaded:Wait()
-                        game:GetService("Debris"):AddItem(clone, clone.TimeLength + 0.5)
+                        local len = clone.TimeLength or 5
+                        task.delay(len + 0.5, function()
+                            if clone then clone:Destroy() end
+                        end)
                     end
 
                     local isDefLine = (path:find(".Default") and path:find("Line")) -- .Default1Line wth
@@ -469,11 +473,14 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                     if path:find(".Hurt") then desc.SoundId = StunSounds[math.random(1, #StunSounds)] end
 
                     if isDefLine or path:find(".Downed") or path:find(".Hurt") then
-                        -- mute others to avoid word stack
+                        if lastSoundProcessTime[path] and tick() - lastSoundProcessTime[path] < 0.05 then
+                            return
+                        end
+                        lastSoundProcessTime[path] = tick()
+
                         for _, child in ipairs(player.Waist:GetChildren()) do
                             if child.Name:find("CreamSpeech") then child:Stop() end
                         end
-                        -- kill lines
                         if isDefLine and lastBloodHitPlayer then
                             local c = lastBloodHitPlayer:GetAttribute("Character")
                             if KillLines[c] then 
@@ -481,7 +488,6 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                                 lastBloodHitPlayer = nil
                             end
                         end
-                        -- fuck that, i just recreate my sound ehhh
                         local sound = Instance.new("Sound")
                         sound.Name = "CreamSpeech - " .. desc.SoundId
                         sound.SoundId = desc.SoundId
@@ -492,8 +498,10 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         sound.Parent = player.Waist
                         sound:Play()
                         sound.Loaded:Wait()
-                        game:GetService("Debris"):AddItem(sound, sound.TimeLength + 0.5)
-                        -- die
+                        local len = sound.TimeLength or 5
+                        task.delay(len + 0.5, function()
+                            if sound then sound:Destroy() end
+                        end)
                         desc.Volume = 0
                     end
                 end
