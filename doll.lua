@@ -135,6 +135,10 @@ print("[Cream x TailsDoll] Model setup done...")
 
 local updatingModels = {}
 
+local function makeWeakRef(obj)
+    return setmetatable({obj = obj}, {__mode = "v"})
+end
+
 local function updatePlayerModel(playerName)
     if updatingModels[playerName] then return end
     updatingModels[playerName] = true
@@ -207,9 +211,22 @@ local function updatePlayerModel(playerName)
     end
 
     local isActive = true
+    local mdlRef = makeWeakRef(mdl)
+    local hrpRef = makeWeakRef(hrp)
+    local newHrpRef = makeWeakRef(newHrp)
+    local myHeadRef = makeWeakRef(myHead)
+    local ogHeadRef = makeWeakRef(ogHead)
+    local plrModelRef = makeWeakRef(plrModel)
 
 	_G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = game:GetService("RunService").Heartbeat:Connect(function()
-		if not mdl or not mdl.Parent then
+        local mdlCheck = mdlRef.obj
+        local hrpCheck = hrpRef.obj
+        local newHrpCheck = newHrpRef.obj
+        local myHeadCheck = myHeadRef.obj
+        local ogHeadCheck = ogHeadRef.obj
+        local plrModelCheck = plrModelRef.obj
+
+		if not mdlCheck or not mdlCheck.Parent then
             if not isActive then return end
             isActive = false
 			warn("[Cream x TailsDoll] Model destroyed, restarting overlay")
@@ -221,29 +238,31 @@ local function updatePlayerModel(playerName)
 			updatePlayerModel(playerName)
 			return
 		end
-		if plrModel:GetAttribute("Character") ~= "TailsDoll" then
+		if plrModelCheck:GetAttribute("Character") ~= "TailsDoll" then
             if not isActive then return end
             isActive = false
-            warn("[Cream x TailsDoll] Player ", plrModel.Name, "isn't TailsDoll rn.")
+            warn("[Cream x TailsDoll] Player ", plrModelCheck.Name, "isn't TailsDoll rn.")
             if _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] then
                 _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name]:Disconnect()
                 _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = nil
                 warn("[Cream x TailsDoll] Disconnecting old heartbeat connection...")
             end
             updatingModels[plrModel.Name] = nil
-			mdl:Destroy()
+			if mdlCheck then mdlCheck:Destroy() end
 			return
 		end
-		newHrp:PivotTo(
-            hrp.CFrame *
+		newHrpCheck:PivotTo(
+            hrpCheck.CFrame *
             CFrame.new(0,-1,0)
         )
-        myHead.C0 = CFrame.new(myHead.C0.Position) * (ogHead.C0 - ogHead.C0.Position)
+        myHeadCheck.C0 = CFrame.new(myHeadCheck.C0.Position) * (ogHeadCheck.C0 - ogHeadCheck.C0.Position)
         -- if Mines and Dodges then Dodges.Value = Mines.Value end
 	end)
 
     local function renameByAttribute(attrName)
-        for _, obj in ipairs(mdl:GetDescendants()) do
+        local mdlCheck = mdlRef.obj
+        if not mdlCheck then return end
+        for _, obj in ipairs(mdlCheck:GetDescendants()) do
             local targetName = obj:GetAttribute(attrName)
             if targetName then obj.Name = targetName end
         end
@@ -255,6 +274,7 @@ local function updatePlayerModel(playerName)
         :FindFirstChild("Cream", true):FindFirstChild("Glide", true)
     )
     CreamGlideTrack.Name = "CreamGlide"
+    local CreamGlideTrackRef = makeWeakRef(CreamGlideTrack)
 
     _G.CreamOnTailsDollSkinAnimationPlayedConnections = _G.CreamOnTailsDollSkinAnimationPlayedConnections or {}
     if _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] then
@@ -262,7 +282,11 @@ local function updatePlayerModel(playerName)
         _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] = nil
     end
 	_G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] = plrModel.Humanoid.Animator.AnimationPlayed:Connect(function(track)
-		if not mdl or not mdl.Parent or (plrModel:GetAttribute("Character") ~= "TailsDoll") then
+        local mdlCheck = mdlRef.obj
+        local plrModelCheck = plrModelRef.obj
+        local CreamGlideTrackCheck = CreamGlideTrackRef.obj
+
+		if not mdlCheck or not mdlCheck.Parent or (plrModelCheck and plrModelCheck:GetAttribute("Character") ~= "TailsDoll") then
 			warn("[Cream x TailsDoll] Disconnecting animatior...")
             if _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] then
                 _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name]:Disconnect()
@@ -274,23 +298,23 @@ local function updatePlayerModel(playerName)
 
         -- print("PLAYED", track.Name, track.Animation.AnimationId)
 
-        if track.Name ~= CreamGlideTrack.Name then 
-            CreamGlideTrack:Stop()
+        if track.Name ~= CreamGlideTrackCheck.Name then 
+            if CreamGlideTrackCheck then CreamGlideTrackCheck:Stop() end
             renameByAttribute("rename_newName") 
-            track.Stopped:Once(function() if isGilding then
+            track.Stopped:Once(function() if isGilding and CreamGlideTrackCheck then
                 renameByAttribute("rename_oldName")
-                CreamGlideTrack:Play(0.1)
+                CreamGlideTrackCheck:Play(0.1)
             end end)
         end
         if track.Name == "Glide" then
             isGilding = true
             track.Stopped:Once(function()
                 isGilding = false
-                CreamGlideTrack:Stop(0.1)
+                if CreamGlideTrackCheck then CreamGlideTrackCheck:Stop(0.1) end
                 renameByAttribute("rename_newName")
             end)
             renameByAttribute("rename_oldName")
-            CreamGlideTrack:Play(0.1)
+            if CreamGlideTrackCheck then CreamGlideTrackCheck:Play(0.1) end
         end
     end)
 
@@ -388,9 +412,11 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
             task.wait(0.001)
             ---print(" '" .. desc.Text .. "' at " .. desc:GetFullName())
             replTextLabel(desc)
+            local labelRef = makeWeakRef(desc)
             local conn = desc:GetPropertyChangedSignal("Text"):Connect(function()
-                if not desc or not desc.Parent then conn:Disconnect() return end
-                replTextLabel(desc)
+                local label = labelRef.obj
+                if not label or not label.Parent then conn:Disconnect() return end
+                replTextLabel(label)
             end)
             table.insert(_G.CreamOnTailsDollGUIConns, conn)
         end
@@ -414,7 +440,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
     local StunSounds = {}
     local DownedSounds = {}
     local AttackSounds = {}
-    local lastBloodHitPlayer = nil
+    local lastBloodHitPlayerRef = nil
 
     _G.CreamOnTailsDollSkinSoundConn = _G.CreamOnTailsDollSkinSoundConn or nil
     if _G.CreamOnTailsDollSkinSoundConn then
@@ -435,6 +461,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
 
             if path:find("HumanoidRootPart.") then
                 local player = desc.Parent.Parent
+                local playerRef = makeWeakRef(player)
                 local isTailsDoll = player:GetAttribute("Character") == "TailsDoll"
 
                 if isTailsDoll and (desc.Name:find("Retract") or desc.Name:find("Unleashed")) then
@@ -449,7 +476,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                     end
                 end
 
-                if path:find(".Blood Hit") then lastBloodHitPlayer = player end
+                if path:find(".Blood Hit") then lastBloodHitPlayerRef = playerRef end
 
                 if isTailsDoll then
 
@@ -461,8 +488,10 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         clone:Play()
                         clone.Loaded:Wait()
                         local len = clone.TimeLength or 5
+                        local cloneRef = makeWeakRef(clone)
                         task.delay(len + 0.5, function()
-                            if clone then clone:Destroy() end
+                            local c = cloneRef.obj
+                            if c then c:Destroy() end
                         end)
                     end
 
@@ -475,11 +504,14 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         for _, child in ipairs(player.Waist:GetChildren()) do
                             if child.Name:find("CreamSpeech") then child:Stop() end
                         end
-                        if isDefLine and lastBloodHitPlayer then
-                            local c = lastBloodHitPlayer:GetAttribute("Character")
-                            if KillLines[c] then 
-                                desc.SoundId = KillLines[c][math.random(1, #KillLines[c])]
-                                lastBloodHitPlayer = nil
+                        if isDefLine and lastBloodHitPlayerRef then
+                            local lastPlayer = lastBloodHitPlayerRef.obj
+                            if lastPlayer then
+                                local c = lastPlayer:GetAttribute("Character")
+                                if KillLines[c] then 
+                                    desc.SoundId = KillLines[c][math.random(1, #KillLines[c])]
+                                    lastBloodHitPlayerRef = nil
+                                end
                             end
                         end
                         local sound = Instance.new("Sound")
@@ -493,8 +525,10 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         sound:Play()
                         sound.Loaded:Wait()
                         local len = sound.TimeLength or 5
+                        local soundRef = makeWeakRef(sound)
                         task.delay(len + 0.5, function()
-                            if sound then sound:Destroy() end
+                            local s = soundRef.obj
+                            if s then s:Destroy() end
                         end)
                         desc.Volume = 0
                     end
