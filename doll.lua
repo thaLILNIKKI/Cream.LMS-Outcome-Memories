@@ -313,13 +313,13 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
     _G.CreamOnTailsDollSkinCharacterConn = game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
 	    if character:GetAttribute("Character") ~= "TailsDoll" then return end
         -- old cam?..
-        if character:FindFirstChild("Head") then character:FindFirstChild("Head"):Destroy() end
+        if character:FindFirstChild("cam") then character:FindFirstChild("cam"):Destroy() end
         -- Health
         local healthxd = Instance.new("NumberValue")
         healthxd.Name = "Health"
         healthxd.Parent = character
         -- wait player server build
-        character:WaitForChild("Head", 5)
+        character:WaitForChild("cam", 30)
         task.wait(1)
         -- Health update and overlay setup
         tryUpdatePlayerModel(character)
@@ -356,14 +356,19 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         end
     end
 
+	local hookedLabels = {}
     local function hookLabel(desc)
+	    if hookedLabels[desc] then return end
         if not desc:IsA("TextLabel") then return end
-        local path = desc:GetFullName()
-        if path:find("CoreGui.") or path:find("skibidi board") then return end
+        if not desc:GetFullName():find(".GameUI.") then return end
         replTextLabel(desc)
-        desc:GetPropertyChangedSignal("Text"):Connect(function()
-            replTextLabel(desc)
-        end)
+	    hookedLabels[desc] = desc:GetPropertyChangedSignal("Text"):Connect(function() replTextLabel(desc) end)
+	    desc.Destroying:Connect(function()
+	        if connections[desc] then
+	            hookedLabels[desc]:Disconnect()
+	            hookedLabels[desc] = nil
+	        end
+	    end)
     end
 
     _G.CreamOnTailsDollGUIConn = _G.CreamOnTailsDollGUIConn or nil
@@ -425,8 +430,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         clone.Name = clone.SoundId
                         clone.Parent = desc.Parent
                         clone:Play()
-                        clone.Loaded:Wait()
-                        game:GetService("Debris"):AddItem(clone, clone.TimeLength)
+						clone.Ended:Once(function() clone:Destroy() end)
                     end
 
                     local isDefLine = (path:find(".Default") and path:find("Line")) -- .Default1Line wth
@@ -457,8 +461,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         sound.SoundGroup = desc.SoundGroup
                         sound.Parent = player.Waist
                         sound:Play()
-                        sound.Loaded:Wait()
-                        game:GetService("Debris"):AddItem(sound, sound.TimeLength)
+						sound.Ended:Once(function() sound:Destroy() end)
 
                         desc.Volume = 0
 
