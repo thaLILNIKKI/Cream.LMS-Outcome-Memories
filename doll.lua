@@ -1,340 +1,298 @@
 print("[Cream x TailsDoll] Now loading... Made by lil2kki <3")
 
-local tar = game:GetService("ReplicatedStorage")
-tar = tar:FindFirstChild("Characters", true)
-tar = tar:FindFirstChild("TailsDoll", true)
-tar = tar:FindFirstChild("Skins", true)
+-- idk if thats helps
+local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"}) end
 
-local OLD_THERE_ALR = tar:FindFirstChild("_OLD", true)
-if OLD_THERE_ALR then
-    warn("[Cream x TailsDoll] Restoring original skin")
-    tar:FindFirstChild("Default", true):Destroy()
-    OLD_THERE_ALR.Name = "Default"
-end
+-- MODEL SETUP IN ReplicatedStorage (for UI and overlay ref)
 
-tar = tar:FindFirstChild("Default", true)
+    local tar = game:GetService("ReplicatedStorage")
+    tar = tar:FindFirstChild("Characters", true)
+    tar = tar:FindFirstChild("TailsDoll", true)
+    tar = tar:FindFirstChild("Skins", true)
 
-local src = game:GetService("ReplicatedStorage")
-src = src:FindFirstChild("Characters", true)
-src = src:FindFirstChild("Cream", true)
-src = src:FindFirstChild("Skins", true)
-src = src:FindFirstChild("Default", true)
-
-if not tar or not src then warn("[Cream x TailsDoll] Models not found!") return end
-
--- clone cream
-local model = src:Clone()
-
-model.Name = tar.Name
-model.Parent = tar.Parent
-
-tar.Name = "_OLD"
-
-for _, v in ipairs(model:GetDescendants()) do
-    if v:IsA("BasePart") then
-        v.Material = Enum.Material.Slate
+    local OLD_THERE_ALR = tar:FindFirstChild("_OLD", true)
+    if OLD_THERE_ALR then
+        warn("[Cream x TailsDoll] Restoring original skin")
+        tar:FindFirstChild("Default", true):Destroy()
+        OLD_THERE_ALR.Name = "Default"
     end
-end
 
-local function find(name)
-    return model:FindFirstChild(name, true)
-end
+    tar = tar:FindFirstChild("Default", true)
 
--- red dots :3
-local thatslikeevilandscary = game:GetObjects("rbxassetid://120086931957772")[1]
-local eyeNames = {{"Eye1","eye1"}, {"Eye2","eye2"}}
-for _, pair in ipairs(eyeNames) do
-    local srcPart = thatslikeevilandscary:FindFirstChild(pair[1], true)
-    local dstPart = model:FindFirstChild(pair[2], true)
-    if srcPart and dstPart then
-        dstPart.Material = Enum.Material.Neon
-        dstPart.Color = Color3.fromRGB(0,0,0)
-        dstPart.Transparency = 1
-        dstPart.Size = dstPart.Size / 3
-        for _, child in ipairs(srcPart:GetChildren()) do
-            if child:IsA("ParticleEmitter") or child:IsA("Attachment") then
-                child.Parent = dstPart
-                if child.Name == "YiSang" then child:Destroy() end
-            end
-        end
-        for _, child in ipairs(dstPart:GetDescendants()) do
-            if child:IsA("ParticleEmitter") then
-                child.LockedToPart = true
-                if child.Name == "bubble" then 
-                    child.LightEmission = 0.1
-                    child.LightInfluence = 0.1
-                end
-            end
-        end
-    end
-end
-thatslikeevilandscary:Destroy()
-
--- eyes
-local eyes = find("eyes")
-if eyes and eyes:IsA("BasePart") then
-    eyes.Material = Enum.Material.Neon
-    eyes.Color = Color3.new(0, 0, 0)
-end
-
--- rename parts
-local function rename(oldName, newName)
-	local obj = find(oldName)
-	while obj do
-		-- print("renaming: "..obj.Name.." -> "..newName.." //"..obj.ClassName)
-		obj.Name = newName
-        obj:SetAttribute("rename_oldName", oldName)
-        obj:SetAttribute("rename_newName", newName)
-		obj = find(oldName)
-	end 
-end
-
-    rename("waist", "Waist")
-    rename("Body", "MainBody")
-
-    rename("eye1", "REye")
-    rename("eye2", "LEye")
-
-    rename("Right Sleeve", "RArm1")
-    rename("Cylinder.013", "RArm2")
-    rename("Cylinder.014", "RArm3")
-    rename("Cylinder.017", "RArm4")
-    rename("Right Hand", "RHand")
-
-    rename("Left Sleeve", "LArm1")
-    rename("Cylinder.023", "LArm2")
-    rename("Cylinder.022", "LArm3")
-    rename("Left Hand", "LHand")
-
-    rename("Right Leg", "RLeg1")
-    rename("Cylinder.001", "RLeg2")
-    rename("Cylinder", "RLeg3")
-    rename("Right Shoe", "RShoe")
-
-    rename("Left Leg", "LLeg1")
-    rename("Cylinder.034", "LLeg2")
-    rename("Cylinder.035", "LLeg3")
-    rename("Left Shoe", "LShoe")
-
-    rename("tail", "RTail")
---
-
--- blood on muzzle :3
-local muzzle = model:FindFirstChild("muzzle", true)
-local drip = game:GetObjects("rbxassetid://84762690015926")[1]
-drip.Parent = muzzle
-drip.UVScale = Vector2.new(1.5, 1)
-
--- dress..
-local dress = model:FindFirstChild("dress", true)
-dress.Material = Enum.Material.Sandstone
-
-print("[Cream x TailsDoll] Model setup done...")
-
--- FUCKING SERVER SIDED PLAYER BUILD HOLY HELL
-
-local updatingModels = {}
-
-local function makeWeakRef(obj)
-    return setmetatable({obj = obj}, {__mode = "v"})
-end
-
-local function updatePlayerModel(playerName)
-    if updatingModels[playerName] then return end
-    updatingModels[playerName] = true
-
-	local plrModel = workspace.Players:FindFirstChild(playerName)
-	if not plrModel then updatingModels[playerName] = nil return end
-
-	if plrModel:GetAttribute("Character") ~= "TailsDoll" then updatingModels[playerName] = nil return end
-
-    print("[Cream x TailsDoll] Updating model for " .. plrModel.Name .. "...")
-
-	local oldOverlayModel = plrModel:FindFirstChild("OverlayModel")
-	if oldOverlayModel then 
-        oldOverlayModel:Destroy()
-        oldOverlayModel = nil
-    end
-    
-	local hrp = plrModel:FindFirstChild("HumanoidRootPart", true)
-	if not hrp then updatingModels[playerName] = nil return end
-
-	local ogHead = plrModel:FindFirstChildOfClass("Motor6D", true)
-
-    for _, v in ipairs(plrModel:GetDescendants()) do
-        if v:IsA("Motor6D") and v.Name == "Head" then ogHead = v end
-        if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
-            if string.find(v.Name, "Claw") then v:Destroy() end
-            v.Transparency = 1
-            v.LocalTransparencyModifier = 1
-            
-        end
-        if v:IsA("ParticleEmitter") then v:Destroy() end -- soul diamond
-        if v:IsA("PointLight") then v:Destroy() end -- soul diamond
-    end
-    
     local src = game:GetService("ReplicatedStorage")
     src = src:FindFirstChild("Characters", true)
-    src = src:FindFirstChild("TailsDoll", true)
+    src = src:FindFirstChild("Cream", true)
     src = src:FindFirstChild("Skins", true)
     src = src:FindFirstChild("Default", true)
 
-    local mdl = src:Clone()
-	mdl.Parent = plrModel
-	mdl.Name = "OverlayModel"
+    if not tar or not src then warn("[Cream x TailsDoll] Models not found!") return end
 
-	local newHrp = mdl:FindFirstChild("HumanoidRootPart", true)
-	if not newHrp then mdl:Destroy() updatingModels[playerName] = nil return end
+    -- clone cream
+    local model = src:Clone()
 
-	local myHead = mdl:FindFirstChildOfClass("Motor6D", true)
+    model.Name = tar.Name
+    model.Parent = tar.Parent
 
-	for _, v in ipairs(mdl:GetDescendants()) do
-        if v:IsA("Motor6D") and v.Name == "Head" then myHead = v end
-		if v:IsA("Humanoid") then v:Destroy() end
-		if v:IsA("Animator") then v:Destroy() end
+    tar.Name = "_OLD"
+
+    for _, v in ipairs(model:GetDescendants()) do
         if v:IsA("BasePart") then
-            v.CanCollide = false
-        end
-	end
-
-    -- print(ogHead:GetFullName())
-    -- print(myHead:GetFullName())
-
-    -- local Mines = plrModel:FindFirstChild("Mines")
-    -- local Dodges = plrModel:FindFirstChild("Dodges")
-
-    _G.CreamOnTailsDollSkinHeartbeatConnections = _G.CreamOnTailsDollSkinHeartbeatConnections or {}
-    if _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] then
-        _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name]:Disconnect()
-        _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = nil
-        warn("[Cream x TailsDoll] Disconnecting old heartbeat connection...")
-    end
-
-    local isActive = true
-    local mdlRef = makeWeakRef(mdl)
-    local hrpRef = makeWeakRef(hrp)
-    local newHrpRef = makeWeakRef(newHrp)
-    local myHeadRef = makeWeakRef(myHead)
-    local ogHeadRef = makeWeakRef(ogHead)
-    local plrModelRef = makeWeakRef(plrModel)
-
-	_G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = game:GetService("RunService").Heartbeat:Connect(function()
-        local mdlCheck = mdlRef.obj
-        local hrpCheck = hrpRef.obj
-        local newHrpCheck = newHrpRef.obj
-        local myHeadCheck = myHeadRef.obj
-        local ogHeadCheck = ogHeadRef.obj
-        local plrModelCheck = plrModelRef.obj
-
-		if not mdlCheck or not mdlCheck.Parent then
-            if not isActive then return end
-            isActive = false
-			warn("[Cream x TailsDoll] Model destroyed, restarting overlay")
-            if _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] then
-                _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name]:Disconnect()
-                _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = nil
-            end
-            updatingModels[plrModel.Name] = nil
-			updatePlayerModel(playerName)
-			return
-		end
-		if plrModelCheck:GetAttribute("Character") ~= "TailsDoll" then
-            if not isActive then return end
-            isActive = false
-            warn("[Cream x TailsDoll] Player ", plrModelCheck.Name, "isn't TailsDoll rn.")
-            if _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] then
-                _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name]:Disconnect()
-                _G.CreamOnTailsDollSkinHeartbeatConnections[plrModel.Name] = nil
-                warn("[Cream x TailsDoll] Disconnecting old heartbeat connection...")
-            end
-            updatingModels[plrModel.Name] = nil
-			if mdlCheck then mdlCheck:Destroy() end
-			return
-		end
-		newHrpCheck:PivotTo(
-            hrpCheck.CFrame *
-            CFrame.new(0,-1,0)
-        )
-        myHeadCheck.C0 = CFrame.new(myHeadCheck.C0.Position) * (ogHeadCheck.C0 - ogHeadCheck.C0.Position)
-        -- if Mines and Dodges then Dodges.Value = Mines.Value end
-	end)
-
-    local function renameByAttribute(attrName)
-        local mdlCheck = mdlRef.obj
-        if not mdlCheck then return end
-        for _, obj in ipairs(mdlCheck:GetDescendants()) do
-            local targetName = obj:GetAttribute(attrName)
-            if targetName then obj.Name = targetName end
+            v.Material = Enum.Material.Slate
         end
     end
 
-    local isGilding = false
-    local CreamGlideTrack = plrModel.Humanoid.Animator:LoadAnimation(
-        game:GetService("ReplicatedStorage"):FindFirstChild("Characters", true)
-        :FindFirstChild("Cream", true):FindFirstChild("Glide", true)
-    )
-    CreamGlideTrack.Name = "CreamGlide"
-    local CreamGlideTrackRef = makeWeakRef(CreamGlideTrack)
-
-    _G.CreamOnTailsDollSkinAnimationPlayedConnections = _G.CreamOnTailsDollSkinAnimationPlayedConnections or {}
-    if _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] then
-        _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name]:Disconnect()
-        _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] = nil
+    local function find(name)
+        return model:FindFirstChild(name, true)
     end
-	_G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] = plrModel.Humanoid.Animator.AnimationPlayed:Connect(function(track)
-        local mdlCheck = mdlRef.obj
-        local plrModelCheck = plrModelRef.obj
-        local CreamGlideTrackCheck = CreamGlideTrackRef.obj
 
-		if not mdlCheck or not mdlCheck.Parent or (plrModelCheck and plrModelCheck:GetAttribute("Character") ~= "TailsDoll") then
-			warn("[Cream x TailsDoll] Disconnecting animatior...")
-            if _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] then
-                _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name]:Disconnect()
-                _G.CreamOnTailsDollSkinAnimationPlayedConnections[plrModel.Name] = nil
+    -- red dots :3
+    local thatslikeevilandscary = game:GetObjects("rbxassetid://120086931957772")[1]
+    local eyeNames = {{"Eye1","eye1"}, {"Eye2","eye2"}}
+    for _, pair in ipairs(eyeNames) do
+        local srcPart = thatslikeevilandscary:FindFirstChild(pair[1], true)
+        local dstPart = model:FindFirstChild(pair[2], true)
+        if srcPart and dstPart then
+            dstPart.Material = Enum.Material.Neon
+            dstPart.Color = Color3.fromRGB(0,0,0)
+            dstPart.Transparency = 1
+            dstPart.Size = dstPart.Size / 3
+            for _, child in ipairs(srcPart:GetChildren()) do
+                if child:IsA("ParticleEmitter") or child:IsA("Attachment") then
+                    child.Parent = dstPart
+                    if child.Name == "YiSang" then child:Destroy() end
+                end
             end
-            updatingModels[plrModel.Name] = nil
-			return
-		end
-
-        -- print("PLAYED", track.Name, track.Animation.AnimationId)
-
-        if track.Name ~= CreamGlideTrackCheck.Name then 
-            if CreamGlideTrackCheck then CreamGlideTrackCheck:Stop() end
-            renameByAttribute("rename_newName") 
-            track.Stopped:Once(function() if isGilding and CreamGlideTrackCheck then
-                renameByAttribute("rename_oldName")
-                CreamGlideTrackCheck:Play(0.1)
-            end end)
+            for _, child in ipairs(dstPart:GetDescendants()) do
+                if child:IsA("ParticleEmitter") then
+                    child.LockedToPart = true
+                    if child.Name == "bubble" then 
+                        child.LightEmission = 0.1
+                        child.LightInfluence = 0.1
+                    end
+                end
+            end
+            srcPart.Part.ParticleEmitter.Parent = dstPart.Attachment
+            dstPart.Attachment.ParticleEmitter.LockedToPart = true
         end
-        if track.Name == "Glide" then
-            isGilding = true
-            track.Stopped:Once(function()
-                isGilding = false
-                if CreamGlideTrackCheck then CreamGlideTrackCheck:Stop(0.1) end
-                renameByAttribute("rename_newName")
+    end
+    thatslikeevilandscary:Destroy()
+
+    -- eyes
+    local eyes = find("eyes")
+    if eyes and eyes:IsA("BasePart") then
+        eyes.Material = Enum.Material.Neon
+        eyes.Color = Color3.new(0, 0, 0)
+    end
+
+    -- rename parts
+    local function rename(oldName, newName)
+        local obj = find(oldName)
+        while obj do
+            -- print("renaming: "..obj.Name.." -> "..newName.." //"..obj.ClassName)
+            obj.Name = newName
+            obj:SetAttribute("rename_oldName", oldName)
+            obj:SetAttribute("rename_newName", newName)
+            obj = find(oldName)
+        end 
+    end
+
+        rename("waist", "Waist")
+        rename("Body", "MainBody")
+
+        rename("eye1", "REye")
+        rename("eye2", "LEye")
+
+        rename("Right Sleeve", "RArm1")
+        rename("Cylinder.013", "RArm2")
+        rename("Cylinder.014", "RArm3")
+        rename("Cylinder.017", "RArm4")
+        rename("Right Hand", "RHand")
+
+        rename("Left Sleeve", "LArm1")
+        rename("Cylinder.023", "LArm2")
+        rename("Cylinder.022", "LArm3")
+        rename("Left Hand", "LHand")
+
+        rename("Right Leg", "RLeg1")
+        rename("Cylinder.001", "RLeg2")
+        rename("Cylinder", "RLeg3")
+        rename("Right Shoe", "RShoe")
+
+        rename("Left Leg", "LLeg1")
+        rename("Cylinder.034", "LLeg2")
+        rename("Cylinder.035", "LLeg3")
+        rename("Left Shoe", "LShoe")
+
+        rename("tail", "RTail")
+
+        rename("REar", "RTail")
+        rename("LEar", "LTail")
+    --
+
+    -- blood on muzzle :3
+    local muzzle = model:FindFirstChild("muzzle", true)
+    local drip = game:GetObjects("rbxassetid://84762690015926")[1]
+    drip.Parent = muzzle
+    drip.UVScale = Vector2.new(1.5, 1)
+
+    -- dress..
+    local dress = model:FindFirstChild("dress", true)
+    dress.Material = Enum.Material.Sandstone
+
+    print("[Cream x TailsDoll] Model setup done...")
+--
+
+-- FUCKING SERVER SIDED PLAYER BUILD HOLY HELL
+    local function updatePlayer(name)
+
+        local player = workspace.Players:FindFirstChild(name)
+        if not player then return end
+
+        if player:GetAttribute("Character") ~= "TailsDoll" then return end
+
+        print("[Cream x TailsDoll] Updating model for " .. player.Name .. "...")
+
+        if player:FindFirstChild("OverlayModel") then return end
+        
+        local hrp = player:FindFirstChild("HumanoidRootPart", true)
+        if not hrp then return end
+
+        local ogHead = player:FindFirstChildOfClass("Motor6D", true)
+
+        for _, v in ipairs(player:GetDescendants()) do
+            if v:IsA("Motor6D") and v.Name == "Head" then ogHead = v end
+            if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
+                if string.find(v.Name, "Claw") then v:Destroy() end
+                v.Transparency = 1
+                v.LocalTransparencyModifier = 1
+                
+            end
+            if v:IsA("ParticleEmitter") then v:Destroy() end -- soul diamond
+            if v:IsA("PointLight") then v:Destroy() end -- soul diamond
+        end
+        
+        local src = game:GetService("ReplicatedStorage")
+        src = src:FindFirstChild("Characters", true)
+        src = src:FindFirstChild("TailsDoll", true)
+        src = src:FindFirstChild("Skins", true)
+        src = src:FindFirstChild("Default", true)
+
+        local mdl = src:Clone()
+        mdl.Parent = player
+        mdl.Name = "OverlayModel"
+
+        local newHrp = mdl:FindFirstChild("HumanoidRootPart", true)
+        if not newHrp then mdl:Destroy() return end
+
+        local myHead = mdl:FindFirstChildOfClass("Motor6D", true)
+
+        for _, v in ipairs(mdl:GetDescendants()) do
+            if v:IsA("Motor6D") and v.Name == "Head" then myHead = v end
+            if v:IsA("Humanoid") then v:Destroy() end
+            if v:IsA("Animator") then v:Destroy() end
+            if v:IsA("BasePart") then
+                v.CanCollide = false
+            end
+        end
+
+        local mdlRef = makeWeakRef(mdl)
+        local hrpRef = makeWeakRef(hrp)
+        local newHrpRef = makeWeakRef(newHrp)
+        local myHeadRef = makeWeakRef(myHead)
+        local ogHeadRef = makeWeakRef(ogHead)
+        local playerRef = makeWeakRef(player)
+
+        coroutine.wrap(function()
+        
+            while true do
+                local mdlCheck = mdlRef.obj
+                local hrpCheck = hrpRef.obj
+                local newHrpCheck = newHrpRef.obj
+                local myHeadCheck = myHeadRef.obj
+                local ogHeadCheck = ogHeadRef.obj
+                local playerCheck = playerRef.obj
+
+                if not mdlCheck or not mdlCheck.Parent or not hrpCheck or not newHrpCheck then
+                    warn("[Cream x TailsDoll] Player model fucked idk")
+                    break
+                end
+
+                newHrpCheck:PivotTo(hrpCheck.CFrame * CFrame.new(0, -1, 0))
+                myHeadCheck.C0 = CFrame.new(myHeadCheck.C0.Position) * (ogHeadCheck.C0 - ogHeadCheck.C0.Position)
+
+                task.wait() -- heartbeat mayb
+            end
+
+            warn("[Cream x TailsDoll] Model destroyed, trying to restart overlay")
+            updatePlayer(name)
+
+        end)()
+
+        -- glide anim repl
+
+            local function renameByAttribute(attrName)
+                local mdlCheck = mdlRef.obj
+                if not mdlCheck then return end
+                for _, obj in ipairs(mdlCheck:GetDescendants()) do
+                    local targetName = obj:GetAttribute(attrName)
+                    if targetName then obj.Name = targetName end
+                end
+            end
+
+            local isGilding = false
+            local CreamGlideTrack = player.Humanoid.Animator:LoadAnimation(
+                game:GetService("ReplicatedStorage"):FindFirstChild("Characters", true)
+                :FindFirstChild("Cream", true):FindFirstChild("Glide", true)
+            )
+            CreamGlideTrack.Name = "CreamGlide"
+            local CreamGlideTrackRef = makeWeakRef(CreamGlideTrack)
+
+            player.Humanoid.Animator.AnimationPlayed:Connect(function(track)
+                local mdlCheck = mdlRef.obj
+                local playerCheck = playerRef.obj
+                local CreamGlideTrackCheck = CreamGlideTrackRef.obj
+
+                if track.Name ~= CreamGlideTrackCheck.Name then 
+                    if CreamGlideTrackCheck then CreamGlideTrackCheck:Stop() end
+                    renameByAttribute("rename_newName") 
+                    track.Stopped:Once(function() if isGilding and CreamGlideTrackCheck then
+                        renameByAttribute("rename_oldName")
+                        CreamGlideTrackCheck:Play(0.1)
+                    end end)
+                end
+                if track.Name == "Glide" then
+                    isGilding = true
+                    track.Stopped:Once(function()
+                        isGilding = false
+                        if CreamGlideTrackCheck then CreamGlideTrackCheck:Stop(0.1) end
+                        renameByAttribute("rename_newName")
+                    end)
+                    renameByAttribute("rename_oldName")
+                    if CreamGlideTrackCheck then CreamGlideTrackCheck:Play(0.1) end
+                end
             end)
-            renameByAttribute("rename_oldName")
-            if CreamGlideTrackCheck then CreamGlideTrackCheck:Play(0.1) end
-        end
-    end)
+        --
 
-    updatingModels[plrModel.Name] = nil
-    return plrModel
-end
-
-local function tryUpdatePlayerModel(model)
-    if model:GetAttribute("Character") ~= "TailsDoll" then return end
-    updatePlayerModel(model.Name)
-end
-
-local function walkPlayers()
-    task.wait(1)
-    for _, model in ipairs(workspace.Players:GetChildren()) do
-    	if not model:IsA("Model") then continue end
-    	if model.Name == game.Players.LocalPlayer.Name then continue end
-        tryUpdatePlayerModel(model)
     end
-end
+
+    local function tryUpdatePlayerModel(model)
+        if model:GetAttribute("Character") ~= "TailsDoll" then return end
+        updatePlayer(model.Name)
+    end
+--
+
+-- all players
+    local function walkPlayers()
+        task.wait(1)
+        for _, model in ipairs(workspace.Players:GetChildren()) do
+            if not model:IsA("Model") then continue end
+            if model.Name == game.Players.LocalPlayer.Name then continue end
+            tryUpdatePlayerModel(model)
+        end
+    end
+
+    walkPlayers()
+
     _G.CreamOnTailsDollSkinGameStateConn = _G.CreamOnTailsDollSkinGameStateConn or nil
     if _G.CreamOnTailsDollSkinGameStateConn then
         _G.CreamOnTailsDollSkinGameStateConn:Disconnect()
@@ -342,13 +300,10 @@ end
         print("[Cream x TailsDoll] Previous game state connection destroyed")
     end
     _G.CreamOnTailsDollSkinGameStateConn = workspace:WaitForChild("GameProperties"):WaitForChild("State").Changed:Connect(function(newState)
-        if newState ~= "ING" then return end
-        walkPlayers()
+        if newState == "ING" then walkPlayers() end
     end)
-    walkPlayers()
 --
-
--- CharacterConn
+-- my char
     _G.CreamOnTailsDollSkinCharacterConn = _G.CreamOnTailsDollSkinCharacterConn or nil
     if _G.CreamOnTailsDollSkinCharacterConn then
         _G.CreamOnTailsDollSkinCharacterConn:Disconnect()
@@ -357,83 +312,70 @@ end
     end
     _G.CreamOnTailsDollSkinCharacterConn = game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
 	    if character:GetAttribute("Character") ~= "TailsDoll" then return end
+        -- old cam?..
+        if character:FindFirstChild("Head") then character:FindFirstChild("Head"):Destroy() end
+        -- Health
         local healthxd = Instance.new("NumberValue")
         healthxd.Name = "Health"
         healthxd.Parent = character
-        -- local Dodges = Instance.new("NumberValue")
-        -- Dodges.Name = "Dodges"
-        -- Dodges.Parent = character
-        task.wait(3)
-        healthxd.Value = 0/0
-	    character:SetAttribute("Glide_anim_was_replaced", false)
+        -- wait player server build
+        character:WaitForChild("Head", 5)
+        task.wait(1)
+        -- Health update and overlay setup
         tryUpdatePlayerModel(character)
+        healthxd.Value = 100
     end)
+
     tryUpdatePlayerModel(game.Players.LocalPlayer.Character)
 --
-
 print("[Cream x TailsDoll] Players scanned, game state and your char being listened.")
 
 -- CUSTOM TEXT
+    local textReplacements = {
+        ["S.T.E.P."] = "FUN",
+        ["Reach Out"] = " Tag ~",
+        ["Brighter Day"] = "Laser thingy",
+        ["Tripwire"] = " [CORRUPTED] ",
+        ["TailsDoll"] = "TailsDoll (2)",
+        ["Can you feel the sunshine?"] = "[Info] Instance copied successfully.\n"
+            .."[WARN] ReplicatedStorage missmatch!\n"
+            .."[WARN] Unauthorized access!\n"
+            .."> dont worry, thats just a way i can play :>\n"
+            .."Syntax error."
+    }
 
     local updatingTextLabel = false
     local function replTextLabel(label)
         if updatingTextLabel then return end
         if label.Text:find("TailsDoll (2)") then return end
-        updatingTextLabel = true
-        if label.Text == "S.T.E.P." then label.Text = "FUN" end
-        if label.Text == "Reach Out" then label.Text = " Tag ~" end
-        if label.Text == "Brighter Day" then label.Text = "Laser thingy" end
-        if label.Text == "Tripwire" then label.Text = " [CORRUPTED] " end
-        if label.Text == "TailsDoll" then label.Text = "TailsDoll (2)" end
-        if label.Text == "Can you feel the sunshine?" then 
-            -- label.TextWrapped = false
-            -- label.Font = Enum.Font.Code
-            -- label.TextColor3 = Color3.new(0.98, 0.98, 0.98)
-            -- label.TextXAlignment = Enum.TextXAlignment.Left
-            label.Text = "[Info] Instance copied successfully.\n"
-                    .."[WARN] ReplicatedStorage missmatch!\n"
-                    .."[WARN] Unauthorized access!\n"
-                    .."> dont worry, thats just a way i can play :>\n"
-                    .."Syntax error."
+        local newText = textReplacements[label.Text]
+        if newText then
+            updatingTextLabel = true
+            label.Text = newText
+            updatingTextLabel = false
         end
-        updatingTextLabel = false
     end
-
-    _G.CreamOnTailsDollGUIConns = _G.CreamOnTailsDollGUIConns or {}
-    for _, conn in ipairs(_G.CreamOnTailsDollGUIConns) do
-        pcall(function() conn:Disconnect() end)
-    end
-    table.clear(_G.CreamOnTailsDollGUIConns)
 
     local function hookLabel(desc)
-        if desc:IsA("TextLabel") then
-            local path = desc:GetFullName()
-            if path:find("CoreGui.") or path:find("skibidi board") then return end
-            task.wait(0.001)
-            ---print(" '" .. desc.Text .. "' at " .. desc:GetFullName())
+        if not desc:IsA("TextLabel") then return end
+        local path = desc:GetFullName()
+        if path:find("CoreGui.") or path:find("skibidi board") then return end
+        replTextLabel(desc)
+        desc:GetPropertyChangedSignal("Text"):Connect(function()
             replTextLabel(desc)
-            local labelRef = makeWeakRef(desc)
-            local conn = desc:GetPropertyChangedSignal("Text"):Connect(function()
-                local label = labelRef.obj
-                if not label or not label.Parent then conn:Disconnect() return end
-                replTextLabel(label)
-            end)
-            table.insert(_G.CreamOnTailsDollGUIConns, conn)
-        end
+        end)
     end
 
     _G.CreamOnTailsDollGUIConn = _G.CreamOnTailsDollGUIConn or nil
     if _G.CreamOnTailsDollGUIConn then
         _G.CreamOnTailsDollGUIConn:Disconnect()
         _G.CreamOnTailsDollGUIConn = nil
-        print("[Cream x TailsDoll] Previous gui desc conn destroyed")
     end
     _G.CreamOnTailsDollGUIConn = game:GetService("Players").LocalPlayer.PlayerGui.DescendantAdded:Connect(hookLabel)
-    for _, desc in ipairs(game:GetService("Players").LocalPlayer.PlayerGui:GetDescendants()) do
-        hookLabel(desc)
-    end
+    for _, desc in ipairs(game:GetService("Players").LocalPlayer.PlayerGui:GetDescendants()) do hookLabel(desc) end
     print("[Cream x TailsDoll] Listening for your GUI...")
 --
+
 
 -- CUSTOM SOUNDS
     local assigns = { ["rbxassetid://97101227703333"] = "rbxassetid://139116822099909" }
@@ -452,17 +394,15 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         if desc:IsA("Sound") then
 
             if assigns[desc.SoundId] then desc.SoundId = assigns[desc.SoundId] end
-
-            local path = desc:GetFullName()
-
-            -- print(path) ---
-
-            -- if path:find("asd") or path:find("asd") then return end
-
-            if path:find("HumanoidRootPart.") then
-                local player = desc.Parent.Parent
+            
+            local player = desc.Parent and desc.Parent.Parent
+            if player and player:IsA("Model") and player:FindFirstChild("HumanoidRootPart") then
                 local playerRef = makeWeakRef(player)
                 local isTailsDoll = player:GetAttribute("Character") == "TailsDoll"
+
+                local path = desc:GetFullName()
+
+                if path:find(".Blood Hit") then lastBloodHitPlayerRef = playerRef end
 
                 if isTailsDoll and (desc.Name:find("Retract") or desc.Name:find("Unleashed")) then
                     desc.RollOffMaxDistance = desc.RollOffMaxDistance * 4
@@ -472,11 +412,10 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         if child.Name:find("CreamSpeech") then 
                             desc.Volume = 0
                             desc:Stop()
+                            break
                         end
                     end
                 end
-
-                if path:find(".Blood Hit") then lastBloodHitPlayerRef = playerRef end
 
                 if isTailsDoll then
 
@@ -487,12 +426,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         clone.Parent = desc.Parent
                         clone:Play()
                         clone.Loaded:Wait()
-                        local len = clone.TimeLength or 5
-                        local cloneRef = makeWeakRef(clone)
-                        task.delay(len + 0.5, function()
-                            local c = cloneRef.obj
-                            if c then c:Destroy() end
-                        end)
+                        game:GetService("Debris"):AddItem(clone, clone.TimeLength)
                     end
 
                     local isDefLine = (path:find(".Default") and path:find("Line")) -- .Default1Line wth
@@ -501,19 +435,19 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                     if path:find(".Hurt") then desc.SoundId = StunSounds[math.random(1, #StunSounds)] end
 
                     if isDefLine or path:find(".Downed") or path:find(".Hurt") then
+
                         for _, child in ipairs(player.Waist:GetChildren()) do
-                            if child.Name:find("CreamSpeech") then child:Stop() end
+                            if child.Name:find("CreamSpeech") then child:Stop() child:Destroy() end
                         end
-                        if isDefLine and lastBloodHitPlayerRef then
+
+                        if isDefLine then
                             local lastPlayer = lastBloodHitPlayerRef.obj
                             if lastPlayer then
                                 local c = lastPlayer:GetAttribute("Character")
-                                if KillLines[c] then 
-                                    desc.SoundId = KillLines[c][math.random(1, #KillLines[c])]
-                                    lastBloodHitPlayerRef = nil
-                                end
+                                if KillLines[c] then desc.SoundId = KillLines[c][math.random(1, #KillLines[c])] end
                             end
                         end
+
                         local sound = Instance.new("Sound")
                         sound.Name = "CreamSpeech - " .. desc.SoundId
                         sound.SoundId = desc.SoundId
@@ -524,13 +458,10 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         sound.Parent = player.Waist
                         sound:Play()
                         sound.Loaded:Wait()
-                        local len = sound.TimeLength or 5
-                        local soundRef = makeWeakRef(sound)
-                        task.delay(len + 0.5, function()
-                            local s = soundRef.obj
-                            if s then s:Destroy() end
-                        end)
+                        game:GetService("Debris"):AddItem(sound, sound.TimeLength)
+
                         desc.Volume = 0
+
                     end
                 end
             end
@@ -593,6 +524,6 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
     for i = 1, 14 do table.insert(DownedSounds, myAsset("Down" .. i .. ".mp3")) end
     for i = 1, 8 do table.insert(AttackSounds, myAsset("Attack" .. i .. ".mp3")) end
     print("[Cream x TailsDoll] Finished downloading custom sounds...")
--- 
+--
 
 print("[Cream x TailsDoll] Ready!")
