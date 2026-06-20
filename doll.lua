@@ -343,7 +343,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
 
     local updatingTextLabel = false
     local function replTextLabel(label)
-        if not label or not label.Parent then return end
+        if not label or not label.Parent then pcall(function() label:Destroy() end) return end
         if updatingTextLabel then return end
         local newText = textReplacements[label.Text]
         if newText then
@@ -357,7 +357,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
     local function hookLabel(desc)
         if hookedLabels[desc] then return end
         if not desc:IsA("TextLabel") then return end
-        if not desc:GetFullName():find(".GameUI.") then return end
+        if not desc:GetFullName():find(".Game") then return end
         replTextLabel(desc)
         hookedLabels[desc] = desc:GetPropertyChangedSignal("Text"):Connect(function() replTextLabel(desc) end)
         desc.Destroying:Connect(function()
