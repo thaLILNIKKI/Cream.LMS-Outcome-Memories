@@ -312,15 +312,12 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
     end
     _G.CreamOnTailsDollSkinCharacterConn = game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
 	    if character:GetAttribute("Character") ~= "TailsDoll" then return end
-        -- old cam?..
-        if character:FindFirstChild("cam") then character:FindFirstChild("cam"):Destroy() end
         -- Health
         local healthxd = Instance.new("NumberValue")
         healthxd.Name = "Health"
         healthxd.Parent = character
         -- wait player server build
-        character:WaitForChild("cam", 30)
-        task.wait(1)
+        task.wait(3)
         -- Health update and overlay setup
         tryUpdatePlayerModel(character)
         healthxd.Value = 100
