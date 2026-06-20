@@ -361,7 +361,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         replTextLabel(desc)
         hookedLabels[desc] = desc:GetPropertyChangedSignal("Text"):Connect(function() replTextLabel(desc) end)
         desc.Destroying:Connect(function()
-            if connections[desc] then
+            if hookedLabels[desc] then
                 hookedLabels[desc]:Disconnect()
                 hookedLabels[desc] = nil
             end
