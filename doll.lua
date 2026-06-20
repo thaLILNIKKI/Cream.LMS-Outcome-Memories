@@ -353,11 +353,19 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         end
     end
 
+    local hookedLabels = {}
     local function hookLabel(desc)
+        if hookedLabels[desc] then return end
         if not desc:IsA("TextLabel") then return end
         if not desc:GetFullName():find(".GameUI.") then return end
         replTextLabel(desc)
-		desc:GetPropertyChangedSignal("Text"):Connect(function() replTextLabel(desc) end)
+        hookedLabels[desc] = desc:GetPropertyChangedSignal("Text"):Connect(function() replTextLabel(desc) end)
+        desc.Destroying:Connect(function()
+            if connections[desc] then
+                hookedLabels[desc]:Disconnect()
+                hookedLabels[desc] = nil
+            end
+        end)
     end
 
     _G.CreamOnTailsDollGUIConn = _G.CreamOnTailsDollGUIConn or nil
