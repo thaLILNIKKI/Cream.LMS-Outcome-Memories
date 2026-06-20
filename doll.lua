@@ -354,6 +354,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
     end
 
     local hookedLabels = {}
+	setmetatable(hookedLabels, {__mode = "v"})
     local function hookLabel(desc)
         if hookedLabels[desc] then return end
         if not desc:IsA("TextLabel") then return end
