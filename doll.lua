@@ -325,6 +325,7 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
 
     tryUpdatePlayerModel(game.Players.LocalPlayer.Character)
 --
+
 print("[Cream x TailsDoll] Players scanned, game state and your char being listened.")
 
 -- CUSTOM TEXT
@@ -344,19 +345,21 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
     local updatingTextLabel = false
     local function replTextLabel(label)
         if not label or not label.Parent then pcall(function() label:Destroy() end) return end
-        if updatingTextLabel then return end
-        local newText = textReplacements[label.Text]
-        if newText then
-            updatingTextLabel = true
-            label.Text = newText
-            updatingTextLabel = false
-        end
+        task.spawn(function()
+            if updatingTextLabel then return end
+            local newText = textReplacements[label.Text]
+            if newText then
+                updatingTextLabel = true
+                label.Text = newText
+                updatingTextLabel = false
+            end
+        end)
     end
 
-    local hookedLabels = {}
-	setmetatable(hookedLabels, {__mode = "v"})
+    local hookedLabels = {} setmetatable(hookedLabels, {__mode = "v"})
     local function hookLabel(desc)
         if hookedLabels[desc] then return end
+        if not desc or not desc.Parent then return end
         if not desc:IsA("TextLabel") then return end
         if not desc:GetFullName():find(".Game") then return end
         replTextLabel(desc)
@@ -379,12 +382,11 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
     print("[Cream x TailsDoll] Listening for your GUI...")
 --
 
-
 -- CUSTOM SOUNDS
-    local assigns = { ["rbxassetid://97101227703333"] = "rbxassetid://139116822099909" }
-    local StunSounds = {}
-    local DownedSounds = {}
-    local AttackSounds = {}
+    local assigns = { ["rbxassetid://97101227703333"] = "rbxassetid://139116822099909" } setmetatable(assigns, {__mode = "v"})
+    local StunSounds = {} setmetatable(StunSounds, {__mode = "v"})
+    local DownedSounds = {} setmetatable(DownedSounds, {__mode = "v"})
+    local AttackSounds = {} setmetatable(AttackSounds, {__mode = "v"})
     local lastBloodHitPlayerRef = nil
 
     _G.CreamOnTailsDollSkinSoundConn = _G.CreamOnTailsDollSkinSoundConn or nil
@@ -393,12 +395,16 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         _G.CreamOnTailsDollSkinSoundConn = nil
         print("[Cream x TailsDoll] Previous sound desc conn destroyed")
     end
-    _G.CreamOnTailsDollSkinSoundConn = workspace.DescendantAdded:Connect(function(desc)
-        if desc:IsA("Sound") then
+    _G.CreamOnTailsDollSkinSoundConn = workspace.DescendantAdded:Connect(function(a)
+        if not a or not a:IsA("Sound") then return end
+        if not a.Parent or not a.Parent.Parent then return end
+        local descRef = makeWeakRef(a)
+        task.spawn(function()
+            local desc = descRef.obj
 
             if assigns[desc.SoundId] then desc.SoundId = assigns[desc.SoundId] end
             
-            local player = desc.Parent and desc.Parent.Parent
+            local player = desc.Parent.Parent
             if player and player:IsA("Model") and player:FindFirstChild("HumanoidRootPart") then
                 local playerRef = makeWeakRef(player)
                 local isTailsDoll = player:GetAttribute("Character") == "TailsDoll"
@@ -428,7 +434,7 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         clone.Name = clone.SoundId
                         clone.Parent = desc.Parent
                         clone:Play()
-						clone.Ended:Once(function() clone:Destroy() end)
+                        clone.Ended:Once(function() clone:Destroy() end)
                     end
 
                     local isDefLine = (path:find(".Default") and path:find("Line")) -- .Default1Line wth
@@ -459,14 +465,14 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                         sound.SoundGroup = desc.SoundGroup
                         sound.Parent = player.Waist
                         sound:Play()
-						sound.Ended:Once(function() sound:Destroy() end)
+                        sound.Ended:Once(function() sound:Destroy() end)
 
                         desc.Volume = 0
 
                     end
                 end
             end
-        end
+        end)
     end)
     print("[Cream x TailsDoll] Listening for new dynamuc sounds in workspace...")
 
