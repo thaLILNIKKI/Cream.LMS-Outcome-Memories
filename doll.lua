@@ -374,7 +374,6 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         if not desc:IsA("TextLabel") then return end
         if not desc:GetFullName():find(".Game") then return end
         replTextLabel(desc)
-        desc:GetPropertyChangedSignal("Text"):Connect(function() replTextLabel(desc) end)
         local textConn
         textConn = desc:GetPropertyChangedSignal("Text"):Connect(function()
             if not desc.Parent then textConn:Disconnect() return end
