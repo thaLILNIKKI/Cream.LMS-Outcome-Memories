@@ -225,7 +225,7 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
                 task.wait() -- heartbeat mayb
             end
 
-            warn("[Cream x TailsDoll] Model destroyed, trying to restart overlay")
+            warn("[Cream x TailsDoll] Model destroyed for unknown reason xd, trying to restart overlay")
             updatePlayer(name)
 
         end)()
@@ -330,6 +330,8 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
 
 print("[Cream x TailsDoll] Players scanned, game state and your char being listened.")
 
+-- if game then return end
+
 -- CUSTOM TEXT
     local textReplacements = {
         ["S.T.E.P."] = "FUN",
@@ -363,6 +365,12 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         if not desc:GetFullName():find(".Game") then return end
         replTextLabel(desc)
         desc:GetPropertyChangedSignal("Text"):Connect(function() replTextLabel(desc) end)
+        local textConn
+        textConn = desc:GetPropertyChangedSignal("Text"):Connect(function()
+            if not desc.Parent then textConn:Disconnect() return end
+            replTextLabel(desc)
+        end)
+        desc.Destroying:Once(function() if textConn then textConn:Disconnect() end end)
         desc:SetAttribute("CreamOnTailsDollHookedLabel", true)
     end
 
@@ -377,10 +385,10 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
 --
 
 -- CUSTOM SOUNDS
-    local assigns = { ["rbxassetid://97101227703333"] = "rbxassetid://139116822099909" } setmetatable(assigns, {__mode = "v"})
-    local StunSounds = {} setmetatable(StunSounds, {__mode = "v"})
-    local DownedSounds = {} setmetatable(DownedSounds, {__mode = "v"})
-    local AttackSounds = {} setmetatable(AttackSounds, {__mode = "v"})
+    local assigns = { ["rbxassetid://97101227703333"] = "rbxassetid://139116822099909" }
+    local StunSounds = {}
+    local DownedSounds = {}
+    local AttackSounds = {}
     local lastBloodHitPlayerRef = nil
 
     _G.CreamOnTailsDollSkinSoundConn = _G.CreamOnTailsDollSkinSoundConn or nil
@@ -397,12 +405,11 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         
         local player = desc.Parent.Parent
         if player and player:IsA("Model") and player:FindFirstChild("HumanoidRootPart") then
-            local playerRef = makeWeakRef(player)
             local isTailsDoll = player:GetAttribute("Character") == "TailsDoll"
 
             local path = desc:GetFullName()
 
-            if path:find(".Blood Hit") then lastBloodHitPlayerRef = playerRef end
+            if path:find(".Blood Hit") then lastBloodHitPlayerRef = makeWeakRef(player) end
 
             if isTailsDoll and (desc.Name:find("Retract") or desc.Name:find("Unleashed")) then
                 desc.RollOffMaxDistance = desc.RollOffMaxDistance * 4
@@ -425,7 +432,11 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                     clone.Name = clone.SoundId
                     clone.Parent = desc.Parent
                     clone:Play()
-                    clone.Ended:Once(function() clone:Destroy() end)
+                    local endedconn = clone.Ended:Once(function() clone:Destroy() end)
+                    task.delay(10, function()
+                        if clone.Parent then clone:Destroy() end
+                        if endedconn then endedconn:Disconnect() end
+                    end)
                 end
 
                 local isDefLine = (path:find(".Default") and path:find("Line")) -- .Default1Line wth
@@ -456,7 +467,11 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                     sound.SoundGroup = desc.SoundGroup
                     sound.Parent = player.Waist
                     sound:Play()
-                    sound.Ended:Once(function() sound:Destroy() end)
+                    local endedconn = sound.Ended:Once(function() sound:Destroy() end)
+                    task.delay(10, function()
+                        if sound.Parent then sound:Destroy() end
+                        if endedconn then endedconn:Disconnect() end
+                    end)
 
                     desc.Volume = 0
 
