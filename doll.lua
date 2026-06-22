@@ -5,6 +5,16 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
 
 -- MODEL SETUP IN ReplicatedStorage (for UI and overlay ref)
 
+    --Icons Cream
+    while game.ReplicatedStorage.ClientAssets.Icons:FindFirstChild("TailsDoll") do
+        game.ReplicatedStorage.ClientAssets.Icons.TailsDoll:Destroy()
+        warn("[Cream x TailsDoll] Old icons removed")
+    end
+    local icons = game.ReplicatedStorage.ClientAssets.Icons.Cream:Clone()
+    icons.Parent = game.ReplicatedStorage.ClientAssets.Icons
+    icons.Name = "TailsDoll"
+    icons.Eyes:Destroy()
+
     local tar = game:GetService("ReplicatedStorage")
     tar = tar:FindFirstChild("Characters", true)
     tar = tar:FindFirstChild("TailsDoll", true)
@@ -400,6 +410,18 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
     _G.CreamOnTailsDollSkinSoundConn = workspace.DescendantAdded:Connect(function(desc)
         if not desc or not desc:IsA("Sound") then return end
         if not desc.Parent or not desc.Parent.Parent then return end
+
+        if desc.SoundId == "rbxassetid://131820864449998" then
+            local Retracts = { 
+                assigns[desc.SoundId]
+                , DownedSounds[8] -- other giggle
+                , DownedSounds[1] -- be careful
+                , DownedSounds[12] -- whats wrong?..
+                , StunSounds[27] -- huuuh(
+                , StunSounds[28] -- huuuh(
+            }
+            desc.SoundId = Retracts[math.random(1, #Retracts)]
+        end
 
         if assigns[desc.SoundId] then desc.SoundId = assigns[desc.SoundId] end
         
