@@ -212,10 +212,12 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
                 local ogHeadCheck = ogHeadRef.obj
                 local playerCheck = playerRef.obj
 
-                if not mdlCheck or not mdlCheck.Parent or not hrpCheck or not newHrpCheck then
-                    warn("[Cream x TailsDoll] Player model fucked idk")
-                    break
+                if not hrpCheck or not hrpCheck.Parent then
+                    warn("[Cream x TailsDoll] Player model got backrooms idk (lost HumanoidRootPart)")
+                    return
                 end
+
+                if not mdlCheck or not mdlCheck.Parent then break end -- ok then i restart overlay
 
                 newHrpCheck:PivotTo(hrpCheck.CFrame * CFrame.new(0, -1, 0))
                 myHeadCheck.C0 = CFrame.new(myHeadCheck.C0.Position) * (ogHeadCheck.C0 - ogHeadCheck.C0.Position)
@@ -344,32 +346,24 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
 
     local updatingTextLabel = false
     local function replTextLabel(label)
-        if not label or not label.Parent then pcall(function() label:Destroy() end) return end
-        task.spawn(function()
-            if updatingTextLabel then return end
-            local newText = textReplacements[label.Text]
-            if newText then
-                updatingTextLabel = true
-                label.Text = newText
-                updatingTextLabel = false
-            end
-        end)
+        if not label or not label.Parent then return end
+        if updatingTextLabel then return end
+        if textReplacements[label.Text] then
+            updatingTextLabel = true
+            label.Text = textReplacements[label.Text]
+            print("[CHANGED] "..label:GetFullName())
+            updatingTextLabel = false
+        end
     end
 
-    local hookedLabels = {} setmetatable(hookedLabels, {__mode = "v"})
     local function hookLabel(desc)
-        if hookedLabels[desc] then return end
+        if desc:GetAttribute("CreamOnTailsDollHookedLabel") then return end
         if not desc or not desc.Parent then return end
         if not desc:IsA("TextLabel") then return end
         if not desc:GetFullName():find(".Game") then return end
         replTextLabel(desc)
-        hookedLabels[desc] = desc:GetPropertyChangedSignal("Text"):Connect(function() replTextLabel(desc) end)
-        desc.Destroying:Connect(function()
-            if hookedLabels[desc] then
-                hookedLabels[desc]:Disconnect()
-                hookedLabels[desc] = nil
-            end
-        end)
+        desc:GetPropertyChangedSignal("Text"):Connect(function() replTextLabel(desc) end)
+        desc:SetAttribute("CreamOnTailsDollHookedLabel", true)
     end
 
     _G.CreamOnTailsDollGUIConn = _G.CreamOnTailsDollGUIConn or nil
@@ -377,8 +371,8 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         _G.CreamOnTailsDollGUIConn:Disconnect()
         _G.CreamOnTailsDollGUIConn = nil
     end
-    _G.CreamOnTailsDollGUIConn = game:GetService("Players").LocalPlayer.PlayerGui.DescendantAdded:Connect(hookLabel)
-    for _, desc in ipairs(game:GetService("Players").LocalPlayer.PlayerGui:GetDescendants()) do hookLabel(desc) end
+    _G.CreamOnTailsDollGUIConn = game.Players.LocalPlayer:WaitForChild("PlayerGui").DescendantAdded:Connect(hookLabel)
+    for _, desc in ipairs(game.Players.LocalPlayer:WaitForChild("PlayerGui"):GetDescendants()) do hookLabel(desc) end
     print("[Cream x TailsDoll] Listening for your GUI...")
 --
 
@@ -395,84 +389,81 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
         _G.CreamOnTailsDollSkinSoundConn = nil
         print("[Cream x TailsDoll] Previous sound desc conn destroyed")
     end
-    _G.CreamOnTailsDollSkinSoundConn = workspace.DescendantAdded:Connect(function(a)
-        if not a or not a:IsA("Sound") then return end
-        if not a.Parent or not a.Parent.Parent then return end
-        local descRef = makeWeakRef(a)
-        task.spawn(function()
-            local desc = descRef.obj
+    _G.CreamOnTailsDollSkinSoundConn = workspace.DescendantAdded:Connect(function(desc)
+        if not desc or not desc:IsA("Sound") then return end
+        if not desc.Parent or not desc.Parent.Parent then return end
 
-            if assigns[desc.SoundId] then desc.SoundId = assigns[desc.SoundId] end
-            
-            local player = desc.Parent.Parent
-            if player and player:IsA("Model") and player:FindFirstChild("HumanoidRootPart") then
-                local playerRef = makeWeakRef(player)
-                local isTailsDoll = player:GetAttribute("Character") == "TailsDoll"
+        if assigns[desc.SoundId] then desc.SoundId = assigns[desc.SoundId] end
+        
+        local player = desc.Parent.Parent
+        if player and player:IsA("Model") and player:FindFirstChild("HumanoidRootPart") then
+            local playerRef = makeWeakRef(player)
+            local isTailsDoll = player:GetAttribute("Character") == "TailsDoll"
 
-                local path = desc:GetFullName()
+            local path = desc:GetFullName()
 
-                if path:find(".Blood Hit") then lastBloodHitPlayerRef = playerRef end
+            if path:find(".Blood Hit") then lastBloodHitPlayerRef = playerRef end
 
-                if isTailsDoll and (desc.Name:find("Retract") or desc.Name:find("Unleashed")) then
-                    desc.RollOffMaxDistance = desc.RollOffMaxDistance * 4
-                    desc.RollOffMinDistance = desc.RollOffMinDistance * 2
-                    desc.Volume = 1
-                    for _, child in ipairs(player.Waist:GetChildren()) do
-                        if child.Name:find("CreamSpeech") then 
-                            desc.Volume = 0
-                            desc:Stop()
-                            break
-                        end
-                    end
-                end
-
-                if isTailsDoll then
-
-                    if desc.SoundId == "rbxassetid://77110140707717" then
-                        local clone = desc:Clone()
-                        clone.SoundId = AttackSounds[math.random(1, #AttackSounds)]
-                        clone.Name = clone.SoundId
-                        clone.Parent = desc.Parent
-                        clone:Play()
-                        clone.Ended:Once(function() clone:Destroy() end)
-                    end
-
-                    local isDefLine = (path:find(".Default") and path:find("Line")) -- .Default1Line wth
-
-                    if isDefLine or path:find(".Downed") then desc.SoundId = DownedSounds[math.random(1, #DownedSounds)] end
-                    if path:find(".Hurt") then desc.SoundId = StunSounds[math.random(1, #StunSounds)] end
-
-                    if isDefLine or path:find(".Downed") or path:find(".Hurt") then
-
-                        for _, child in ipairs(player.Waist:GetChildren()) do
-                            if child.Name:find("CreamSpeech") then child:Stop() child:Destroy() end
-                        end
-
-                        if isDefLine then
-                            local lastPlayer = lastBloodHitPlayerRef.obj
-                            if lastPlayer then
-                                local c = lastPlayer:GetAttribute("Character")
-                                if KillLines[c] then desc.SoundId = KillLines[c][math.random(1, #KillLines[c])] end
-                            end
-                        end
-
-                        local sound = Instance.new("Sound")
-                        sound.Name = "CreamSpeech - " .. desc.SoundId
-                        sound.SoundId = desc.SoundId
-                        sound.Volume = desc.Volume
-                        sound.RollOffMaxDistance = desc.RollOffMaxDistance
-                        sound.RollOffMinDistance = desc.RollOffMinDistance
-                        sound.SoundGroup = desc.SoundGroup
-                        sound.Parent = player.Waist
-                        sound:Play()
-                        sound.Ended:Once(function() sound:Destroy() end)
-
+            if isTailsDoll and (desc.Name:find("Retract") or desc.Name:find("Unleashed")) then
+                desc.RollOffMaxDistance = desc.RollOffMaxDistance * 4
+                desc.RollOffMinDistance = desc.RollOffMinDistance * 2
+                desc.Volume = 1
+                for _, child in ipairs(player.Waist:GetChildren()) do
+                    if child.Name:find("CreamSpeech") then 
                         desc.Volume = 0
-
+                        desc:Stop()
+                        break
                     end
                 end
             end
-        end)
+
+            if isTailsDoll then
+
+                if desc.SoundId == "rbxassetid://77110140707717" then
+                    local clone = desc:Clone()
+                    clone.SoundId = AttackSounds[math.random(1, #AttackSounds)]
+                    clone.Name = clone.SoundId
+                    clone.Parent = desc.Parent
+                    clone:Play()
+                    clone.Ended:Once(function() clone:Destroy() end)
+                end
+
+                local isDefLine = (path:find(".Default") and path:find("Line")) -- .Default1Line wth
+
+                if isDefLine or path:find(".Downed") then desc.SoundId = DownedSounds[math.random(1, #DownedSounds)] end
+                if path:find(".Hurt") then desc.SoundId = StunSounds[math.random(1, #StunSounds)] end
+
+                if isDefLine or path:find(".Downed") or path:find(".Hurt") then
+
+                    for _, child in ipairs(player.Waist:GetChildren()) do
+                        if child.Name:find("CreamSpeech") then child:Stop() child:Destroy() end
+                    end
+
+                    if isDefLine then
+                        local lastPlayer = lastBloodHitPlayerRef.obj
+                        if lastPlayer then
+                            local c = lastPlayer:GetAttribute("Character")
+                            if KillLines[c] then desc.SoundId = KillLines[c][math.random(1, #KillLines[c])] end
+                        end
+                    end
+
+                    local sound = Instance.new("Sound")
+                    sound.Name = "CreamSpeech - " .. desc.SoundId
+                    sound.SoundId = desc.SoundId
+                    sound.Volume = desc.Volume
+                    sound.RollOffMaxDistance = desc.RollOffMaxDistance
+                    sound.RollOffMinDistance = desc.RollOffMinDistance
+                    sound.SoundGroup = desc.SoundGroup
+                    sound.Parent = player.Waist
+                    sound:Play()
+                    sound.Ended:Once(function() sound:Destroy() end)
+
+                    desc.Volume = 0
+
+                end
+            end
+        end
+        
     end)
     print("[Cream x TailsDoll] Listening for new dynamuc sounds in workspace...")
 
