@@ -153,7 +153,7 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
 --
 
 -- FUCKING SERVER SIDED PLAYER BUILD HOLY HELL
-    local function updatePlayer(name)
+    local function tryUpdatePlayer(name)
 
         local player = workspace.Players:FindFirstChild(name)
         if not player then return end
@@ -162,7 +162,41 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
 
         print("[Cream x TailsDoll] Updating model for " .. player.Name .. "...")
 
-        if player:FindFirstChild("OverlayModel") then return end
+        if player:FindFirstChild("OverlayModel") then
+            warn("[Cream x TailsDoll] Player already have OverlayModel, update cancelled")
+            return
+        end
+
+        local isLocalPlayer = player.Name == game.Players.LocalPlayer.Name
+
+        -- first prebuild setup
+        if not player:FindFirstChild("Health") then
+
+            -- sometimes game spam errors without it lol
+            local BeingChased = Instance.new("ObjectValue")
+            BeingChased.Name = "BeingChased"
+            BeingChased.Value = player
+            BeingChased.Parent = player
+            
+            local healthxd = Instance.new("NumberValue")
+            healthxd.Name = "Health"
+            healthxd.Parent = player
+            coroutine.wrap(function()
+                task.wait(1) -- breaks health bar :3
+                healthxd.Value = 100
+            end)()
+
+            -- wait player server build..
+            if isLocalPlayer then
+                player:WaitForChild("cam")
+                local lastCFrame = workspace.CurrentCamera.CFrame
+                repeat task.wait(0.1)
+                until workspace.CurrentCamera.CFrame ~= lastCFrame
+            else
+                task.wait(1)
+            end
+
+        end
         
         local hrp = player:FindFirstChild("HumanoidRootPart", true)
         if not hrp then return end
@@ -177,6 +211,8 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
                 v.LocalTransparencyModifier = 1
                 
             end
+            if v:IsA("SurfaceGui") then v.Enabled = false end
+            if v:IsA("SurfaceAppearance") then v:Destroy() end
             if v:IsA("ParticleEmitter") then v:Destroy() end -- soul diamond
             if v:IsA("PointLight") then v:Destroy() end -- soul diamond
         end
@@ -236,7 +272,7 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
             end
 
             warn("[Cream x TailsDoll] Model destroyed for unknown reason xd, trying to restart overlay")
-            updatePlayer(name)
+            tryUpdatePlayer(name)
 
         end)()
 
@@ -286,20 +322,14 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
         --
 
     end
-
-    local function tryUpdatePlayerModel(model)
-        if model:GetAttribute("Character") ~= "TailsDoll" then return end
-        updatePlayer(model.Name)
-    end
 --
 
 -- all players
     local function walkPlayers()
-        task.wait(1)
         for _, model in ipairs(workspace.Players:GetChildren()) do
             if not model:IsA("Model") then continue end
             if model.Name == game.Players.LocalPlayer.Name then continue end
-            tryUpdatePlayerModel(model)
+            tryUpdatePlayer(model.Name)
         end
     end
 
@@ -323,19 +353,10 @@ local function makeWeakRef(obj) return setmetatable({obj = obj}, {__mode = "v"})
         print("[Cream x TailsDoll] Previous game сharacter added connection destroyed")
     end
     _G.CreamOnTailsDollSkinCharacterConn = game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
-	    if character:GetAttribute("Character") ~= "TailsDoll" then return end
-        -- Health
-        local healthxd = Instance.new("NumberValue")
-        healthxd.Name = "Health"
-        healthxd.Parent = character
-        -- wait player server build
-        task.wait(3)
-        -- Health update and overlay setup
-        tryUpdatePlayerModel(character)
-        healthxd.Value = 100
+        tryUpdatePlayer(character.Name)
     end)
 
-    tryUpdatePlayerModel(game.Players.LocalPlayer.Character)
+    tryUpdatePlayer(game.Players.LocalPlayer.Character.Name)
 --
 
 print("[Cream x TailsDoll] Players scanned, game state and your char being listened.")
@@ -355,34 +376,31 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
             .."> dont worry, thats just a way i can play :>\n"
             .."Syntax error."
     }
-
-    local updatingTextLabel = false
-    local function replTextLabel(label)
-        if not label or not label.Parent then return end
-        if updatingTextLabel then return end
-        if textReplacements[label.Text] then
-            updatingTextLabel = true
-            label.Text = textReplacements[label.Text]
-            print("[CHANGED] "..label:GetFullName())
-            updatingTextLabel = false
-        end
-    end
-
+    local TextLabelNames = {
+        CharName = true,
+        CharDesc = true,
+        ABName = true,
+        selectedChar = true,
+        char = true, -- vote screen (same names xd)
+    }
     local function hookLabel(desc)
-        if desc:GetAttribute("CreamOnTailsDollHookedLabel") then return end
         if not desc or not desc.Parent then return end
         if not desc:IsA("TextLabel") then return end
-        if not desc:GetFullName():find(".Game") then return end
-        replTextLabel(desc)
-        local textConn
-        textConn = desc:GetPropertyChangedSignal("Text"):Connect(function()
-            if not desc.Parent then textConn:Disconnect() return end
-            replTextLabel(desc)
-        end)
-        desc.Destroying:Once(function() if textConn then textConn:Disconnect() end end)
-        desc:SetAttribute("CreamOnTailsDollHookedLabel", true)
+        if not TextLabelNames[desc.Name] then return end
+        -- warn("[Cream x TailsDoll] Watching TextLabel: "..desc.Name)
+        local ref = makeWeakRef(desc)
+        coroutine.wrap(function()
+            while true do
+                local xd = ref.obj
+                if not xd or not xd.Parent then 
+                    -- warn("[Cream x TailsDoll] Lost TextLabel to watch: "..desc:GetFullName()) 
+                    return 
+                end
+                if textReplacements[desc.Text] then desc.Text = textReplacements[desc.Text] end
+                task.wait() -- heartbeat mayb
+            end
+        end)()
     end
-
     _G.CreamOnTailsDollGUIConn = _G.CreamOnTailsDollGUIConn or nil
     if _G.CreamOnTailsDollGUIConn then
         _G.CreamOnTailsDollGUIConn:Disconnect()
@@ -415,9 +433,6 @@ print("[Cream x TailsDoll] Players scanned, game state and your char being liste
                 assigns[desc.SoundId]
                 , DownedSounds[8] -- other giggle
                 , DownedSounds[1] -- be careful
-                , DownedSounds[12] -- whats wrong?..
-                , StunSounds[27] -- huuuh(
-                , StunSounds[28] -- huuuh(
             }
             desc.SoundId = Retracts[math.random(1, #Retracts)]
         end
