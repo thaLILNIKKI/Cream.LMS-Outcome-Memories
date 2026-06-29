@@ -14,7 +14,14 @@ loadstring(game:HttpGet(
   .."doll.lua"
 ))()
 ```
-> [showcase video](https://youtu.be/k88gS3HSLK4)
+## Loadstr for 2011x (beta)
+```lua
+loadstring(game:HttpGet(
+  "https://raw.githubusercontent.com/thaLILNIKKI/"
+  .."Cream.LMS-Outcome-Memories/HEAD/"
+  .."2011x.lua"
+))()
+```
 ## Loadstr for Cream
 ```lua
 loadstring(game:HttpGet(
