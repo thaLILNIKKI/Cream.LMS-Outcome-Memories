@@ -14,19 +14,21 @@ loadstring(game:HttpGet(
   .."doll.lua"
 ))()
 ```
-## Loadstr for 2011x (beta)
-```lua
-loadstring(game:HttpGet(
-  "https://raw.githubusercontent.com/thaLILNIKKI/"
-  .."Cream.LMS-Outcome-Memories/HEAD/"
-  .."2011x.lua"
-))()
-```
 ## Loadstr for Cream
 ```lua
 loadstring(game:HttpGet(
   "https://raw.githubusercontent.com/thaLILNIKKI/"
   .."Cream.LMS-Outcome-Memories/HEAD/"
   .."me.lua"
+))()
+```
+<br><br><br><br>
+## Loadstr for 2011x (beta)
+[RUN 2011x VARIANT ON YOUR OWN RISK, BY NOW OTHER PLAYERS SEE YOU IN T-POSE BUT WITH ANIMATED HEAD](https://youtu.be/rt_TaerB_rQ?si=LoJvOhUD1H36YMpB)
+```lua
+loadstring(game:HttpGet(
+  "https://raw.githubusercontent.com/thaLILNIKKI/"
+  .."Cream.LMS-Outcome-Memories/HEAD/"
+  .."2011x.lua"
 ))()
 ```
