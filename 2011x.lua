@@ -194,44 +194,16 @@ local function updatePlayer(name)
 
 end
 
--- all players
-    local function walkPlayers()
-        task.wait(1)
-        for _, model in ipairs(workspace.Players:GetChildren()) do
-            if not model:IsA("Model") then continue end
-            if model.Name == game.Players.LocalPlayer.Name then continue end
-            updatePlayer(model.Name)
-        end
-    end
-
-    walkPlayers()
-
-    _G.Cream2011xSkinGameStateConn = _G.Cream2011xSkinGameStateConn or nil
-    if _G.Cream2011xSkinGameStateConn then
-        _G.Cream2011xSkinGameStateConn:Disconnect()
-        _G.Cream2011xSkinGameStateConn = nil
-        print("[Cream x 2011x] Previous game state connection destroyed")
-    end
-    _G.Cream2011xSkinGameStateConn = workspace:WaitForChild("GameProperties"):WaitForChild("State").Changed:Connect(function(newState)
-        if newState == "ING" then walkPlayers() end
-    end)
---
-
--- my char
-    _G.Cream2011xSkinCharacterConn = _G.Cream2011xSkinCharacterConn or nil
-    if _G.Cream2011xSkinCharacterConn then
-        _G.Cream2011xSkinCharacterConn:Disconnect()
-        _G.Cream2011xSkinCharacterConn = nil
-        print("[Cream x 2011x] Previous game сharacter added connection destroyed")
-    end
-    _G.Cream2011xSkinCharacterConn = game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
-        updatePlayer(character.Name)
-    end)
-
-    updatePlayer(game.Players.LocalPlayer.Character.Name)
---
-
-print("[Cream x 2011x] Players scanned, game state and your char being listened.")
+_G.Cream2011xSkinCharacterConn = _G.Cream2011xSkinCharacterConn or nil
+if _G.Cream2011xSkinCharacterConn then
+    _G.Cream2011xSkinCharacterConn:Disconnect()
+    _G.Cream2011xSkinCharacterConn = nil
+    print("[Cream x 2011x] Previous game сharacter added connection destroyed")
+end
+_G.Cream2011xSkinCharacterConn = game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    updatePlayer(character.Name)
+end)
+updatePlayer(game.Players.LocalPlayer.Character.Name)
 
 local function loadCustomAsset(url, filename)
     if not isfile(filename) then writefile(filename, game:HttpGet(url)) end
